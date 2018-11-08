@@ -10,7 +10,7 @@ As the license states, you can edit the source of Open-Logo, and in such a case 
 
 ## For a demo...
 
-TBA
+https://danifoldi.github.io/Open-Logo/
 
 ### What to contribute?
 
