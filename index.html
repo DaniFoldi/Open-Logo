@@ -27,14 +27,7 @@
                 name: "forward",
                 cmd: {hu: ["e", "előre"], en: ["fd"]},
                 func: function(attr) {
-                    canvas.beginPath();
-                    canvas.moveTo(x, y);
-                    x += attr[0] * Math.sin(angle * Math.PI / 180);
-                    y -= attr[0] * Math.cos(angle * Math.PI / 180);
-                    if (pen) {
-                        canvas.lineTo(x, y);   
-                    }
-                    canvas.stroke();
+                    drawLine(x, y, x += attr[0] * Math.sin(angle * Math.PI / 180), y -= attr[0] * Math.cos(angle * Math.PI / 180));
                 },
                 prop: ["n"]
             },
@@ -42,14 +35,7 @@
                 name: "backward",
                 cmd: {hu: ["h"]},
                 func: function(attr) {
-                    canvas.beginPath();
-                    canvas.moveTo(x, y);
-                    x -= attr[0] * Math.sin(angle * Math.PI / 180);
-                    y += attr[0] * Math.cos(angle * Math.PI / 180);
-                    if (pen) {
-                        canvas.lineTo(x, y);   
-                    }
-                    canvas.stroke();
+                    drawLine(x, y, x -= attr[0] * Math.sin(angle * Math.PI / 180), y += attr[0] * Math.cos(angle * Math.PI / 180));
                 },
                 prop: ["n"]
             },
@@ -89,8 +75,8 @@
                 name: "clear",
                 cmd: {hu: ["tr", "törölrajzlap"]},
                 func: function(attr) {
-                    x = Math.floor(canvasTag.width / 2) + 0.5;
-                    y = Math.floor(canvasTag.height / 2) + 0.5;
+                    x = Math.floor(canvasTag.width / 2);
+                    y = Math.floor(canvasTag.height / 2);
                     angle = 0;
                     pen = true;
                     fillcolor = "#111111";
@@ -150,9 +136,11 @@
                 name: "circle",
                 cmd: {hu: ["kör"]},
                 func: function(attr) {
+                    loadData();
                     canvas.beginPath();
                     canvas.arc(x, y, attr[0], 0, 2 * Math.PI);
                     canvas.stroke();
+                    loadData();
                 },
                 prop: ["n"]
             },
@@ -181,10 +169,12 @@
                 cmd: {hu: ["címke"]},
                 func: function(attr) {
                     if (pen) {
+                        loadData();
                         var oldcolor = canvas.fillStyle;
                         canvas.fillStyle = canvas.strokeStyle;
                         canvas.fillText(attr[0].substr(1), x, y);
                         canvas.fillStyle = oldcolor;
+                        loadData();
                         if (underline) {
                             textDecoration(attr[0].substr(1), 0);
                         }
@@ -207,6 +197,30 @@
 
         var canvasData;
 
+        function loadData() {
+            if (typeof canvasData != "undefined") {
+                canvas.putImageData(canvasData, 0, 0);
+            }
+            canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height);
+        }
+
+        function drawLine(x_from, y_from, x_to, y_to) {
+            if (pen) {
+                let color = hexToRgb(canvas.strokeStyle);
+                if (Math.abs(y_to - y_from) <= Math.abs(x_to - x_from)) {
+                    for (let xp = Math.min(x_from, x_to); xp <= Math.max(x_to, x_from); xp++) {
+                        let yp = Math.round(y_from + (xp - x_from) * (y_to - y_from) / (x_to - x_from));
+                        setColorAt(Math.round(xp), Math.round(yp), color);
+                    }
+                } else {
+                    for (let yp = Math.min(y_from, y_to); yp <= Math.max(y_to, y_from); yp++) {
+                        let xp = Math.round(x_from + (yp - y_from) * (x_to - x_from) / (y_to - y_from));
+                        setColorAt(Math.round(xp), Math.round(yp), color);
+                    }
+                }
+            }
+        }
+
         function textDecoration(text, offset) {
           var width = canvas.measureText(text).width;
           var xp = x;
@@ -218,11 +232,7 @@
           }
 
           var yp = y + size + offset;
-          canvas.beginPath();
-          canvas.moveTo(xp, yp);
-          canvas.lineTo(xp + width, yp);
-          canvas.stroke();
-
+          drawLine(xp, yp, xp + width, yp);
         }
 
         function hexToRgb(hex) {
@@ -239,11 +249,11 @@
         }
 
         function setColorAt(xp, yp, fill) {
-            var o = 4 * canvasTag.width * (yp - 1) + 4 * (xp + 1);
+            var o = Math.round(4 * canvasTag.width * (yp - 1) + 4 * (xp + 1));
             canvasData.data[o] = fill.r;
             canvasData.data[o + 1] = fill.g;
             canvasData.data[o + 2] = fill.b;
-            count++;
+            canvasData.data[o + 3] = 255;
         }
 
         function sameColor(a, b) {
@@ -251,7 +261,6 @@
         }
 
         function fillAround(xp, yp, original, fill) {
-            canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height);
             const stack = [[xp, yp]];
             while (stack.length) {
                 const [xp, yp] = stack.pop();
@@ -259,7 +268,6 @@
                 setColorAt(xp, yp, fill);
                 stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1]); 
             }
-            canvas.putImageData(canvasData, 0, 0);
         }
 
         function color(c) {
@@ -479,11 +487,13 @@
                 last = $("textarea").val();
                 c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
                 c.unshift("tr");
+                loadData();
                 if (interpret(1, c)) {
                     $("body").css({background: "red"});
                 } else {
                     $("body").css({background: "white"});
                 }
+                loadData();
             }).trigger("change");
         });
 
