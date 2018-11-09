@@ -388,7 +388,7 @@
                 var index = 0;
                 var e = false;
                 while (index < arr.length) {
-                    f = functions.filter(el => el.cmd[lang].filter(e => e == arr[index].toLowerCase()).length)[0]; // separate []
+                    let f = functions.filter(el => el.cmd[lang].filter(e => e == arr[index].toLowerCase()).length)[0]; // separate []
                     var attr = [];
                     var err = false;
                     if (f == undefined) {
