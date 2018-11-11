@@ -89,6 +89,7 @@
                     canvas.lineJoin = "round";
                     canvas.fillRect(0, 0, canvasTag.width, canvasTag.height);
                     canvas.strokeStyle = "black";
+                    loadData();
                 },
                 prop: []
             },
@@ -136,7 +137,7 @@
                 name: "circle",
                 cmd: {hu: ["kör"]},
                 func: function(attr) {
-                    loadData();
+                    drawData();
                     canvas.beginPath();
                     canvas.arc(x, y, attr[0], 0, 2 * Math.PI);
                     canvas.stroke();
@@ -169,7 +170,7 @@
                 cmd: {hu: ["címke"]},
                 func: function(attr) {
                     if (pen) {
-                        loadData();
+                        drawData();
                         var oldcolor = canvas.fillStyle;
                         canvas.fillStyle = canvas.strokeStyle;
                         canvas.fillText(attr[0].substr(1), x, y);
@@ -198,10 +199,13 @@
         var canvasData;
 
         function loadData() {
+            canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height);
+        }
+
+        function drawData() {
             if (typeof canvasData != "undefined") {
                 canvas.putImageData(canvasData, 0, 0);
             }
-            canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height);
         }
 
         function drawLine(x_from, y_from, x_to, y_to) {
@@ -463,7 +467,7 @@
                             }
                         }
                         if (!err) {
-                            f.func(attr);
+                            let result = f.func(attr);
                         } else {
                             e = true;
                         }
@@ -476,7 +480,7 @@
 
 
         $(function() {
-            var last = "";
+            let last = "";
             canvasTag = $("canvas")[0];
             canvas = canvasTag.getContext("2d");
             lang = "hu";
@@ -485,7 +489,7 @@
                     return;
                 }
                 last = $("textarea").val();
-                c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
+                let c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
                 c.unshift("tr");
                 loadData();
                 if (interpret(1, c)) {
@@ -493,8 +497,9 @@
                 } else {
                     $("body").css({background: "white"});
                 }
-                loadData();
-            }).trigger("change");
+                drawData();
+            });
+            $("textarea").trigger("paste");
         });
 
 
