@@ -214,15 +214,25 @@
                 if (Math.abs(y_to - y_from) <= Math.abs(x_to - x_from)) {
                     for (let xp = Math.min(x_from, x_to); xp <= Math.max(x_to, x_from); xp++) {
                         let yp = Math.round(y_from + (xp - x_from) * (y_to - y_from) / (x_to - x_from));
-                        setColorAt(Math.round(xp), Math.round(yp), color);
+                        setColorAt(overflow(Math.round(xp), canvasTag.width), overflow(Math.round(yp), canvasTag.height), color);
                     }
                 } else {
                     for (let yp = Math.min(y_from, y_to); yp <= Math.max(y_to, y_from); yp++) {
                         let xp = Math.round(x_from + (yp - y_from) * (x_to - x_from) / (y_to - y_from));
-                        setColorAt(Math.round(xp), Math.round(yp), color);
+                        setColorAt(overflow(Math.round(xp), canvasTag.width), overflow(Math.round(yp), canvasTag.height), color);
                     }
                 }
             }
+        }
+
+        function overflow(number, size) {
+            while (number < 0) {
+                number += size;
+            }
+            while (number > size) {
+                number -= size;
+            }
+            return number;
         }
 
         function textDecoration(text, offset) {
