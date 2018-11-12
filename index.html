@@ -75,21 +75,7 @@
                 name: "clear",
                 cmd: {hu: ["tr", "törölrajzlap"]},
                 func: function(attr) {
-                    x = Math.floor(canvasTag.width / 2);
-                    y = Math.floor(canvasTag.height / 2);
-                    angle = 0;
-                    pen = true;
-                    fillcolor = "#111111";
-                    strikethrough = false;
-                    underline = false;
-                    userfunctions = [];
-                    canvas.lineWidth = 1;
-                    canvas.fillStyle = "white";
-                    canvas.lineCap = "round";
-                    canvas.lineJoin = "round";
-                    canvas.fillRect(0, 0, canvasTag.width, canvasTag.height);
-                    canvas.strokeStyle = "black";
-                    loadData();
+                    resetCanvas();
                 },
                 prop: []
             },
@@ -228,17 +214,35 @@
             if (pen) {
                 let color = hexToRgb(canvas.strokeStyle);
                 if (Math.abs(y_to - y_from) <= Math.abs(x_to - x_from)) {
-                    for (let xp = Math.min(x_from, x_to); xp <= Math.max(x_to, x_from); xp++) {
+                    for (let xp = Math.round(Math.min(x_from, x_to)); xp <= Math.max(x_to, x_from); xp++) {
                         let yp = Math.round(y_from + (xp - x_from) * (y_to - y_from) / (x_to - x_from));
-                        setColorAt(overflow(Math.round(xp), canvasTag.width), overflow(Math.round(yp), canvasTag.height), color);
+                        setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color);
                     }
                 } else {
-                    for (let yp = Math.min(y_from, y_to); yp <= Math.max(y_to, y_from); yp++) {
+                    for (let yp = Math.round(Math.min(y_from, y_to)); yp <= Math.max(y_to, y_from); yp++) {
                         let xp = Math.round(x_from + (yp - y_from) * (x_to - x_from) / (y_to - y_from));
-                        setColorAt(overflow(Math.round(xp), canvasTag.width), overflow(Math.round(yp), canvasTag.height), color);
+                        setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color);
                     }
                 }
             }
+        }
+
+        function resetCanvas() {
+            x = Math.floor(canvasTag.width / 2);
+            y = Math.floor(canvasTag.height / 2);
+            angle = 0;
+            pen = true;
+            fillcolor = "#111111";
+            strikethrough = false;
+            underline = false;
+            userfunctions = [];
+            canvas.lineWidth = 1;
+            canvas.fillStyle = "white";
+            canvas.lineCap = "round";
+            canvas.lineJoin = "round";
+            canvas.fillRect(0, 0, canvasTag.width, canvasTag.height);
+            canvas.strokeStyle = "black";
+            loadData();
         }
 
         function overflow(number, size) {
@@ -504,7 +508,6 @@
             return e;
         }
 
-
         $(function() {
             let last = [];
             canvasTag = $("canvas")[0];
@@ -512,11 +515,11 @@
             lang = "hu";
             $("textarea").on("change keyup paste", function() {
                 let c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
-                c.unshift("tr");
                 if (last == c) {
                     return;
                 }
                 last = c;
+                resetCanvas();
                 loadData();
                 if (interpret(1, c)) {
                     $("body").css({background: "red"});
