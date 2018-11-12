@@ -193,6 +193,22 @@
                     userfunctions.push({name: attr[0], input: attr[1], code: attr[2]});
                 },
                 prop: ["s", "v", "b"]
+            },
+            {
+                name: "home",
+                cmd: {hu: ["haza"]},
+                func: function(attr) {
+                    drawLine(x, y, x = canvasTag.width / 2, y = canvasTag.height / 2);
+                },
+                prop: []
+            },
+            {
+                name: "heading",
+                cmd: {hu: ["irány!"]},
+                func: function(attr) {
+                    angle = attr[0];
+                },
+                prop: ["n"]
             }
         ];
 
