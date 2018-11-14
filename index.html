@@ -464,9 +464,9 @@
                                         err = true;
                                     }
                                     break;
-                                    if (typeof arr[index] == "string" && arr[index] != "") {
-                                        attr.push(arr[index]);
                                 case "s": //string
+                                    if (typeof arr[index] == "string" && arr[index] != "" && arr[index][0] == "\"") {
+                                        attr.push(arr[index].substring(1, arr[index].length));
                                     } else {
                                         err = true;
                                     }
