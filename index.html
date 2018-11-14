@@ -22,6 +22,8 @@
 
         var x, y, angle, pen, fillcolor, underline, strikethrough, size;
         var userfunctions = [];
+        var globalvariables = {};
+        var reloadglobals = false;
         var canvas, canvasTag;
         var functions = [
             {
@@ -212,6 +214,15 @@
                     return Math.floor(Math.random() * attr[0]);
                 },
                 prop: ["n"]
+            },
+            {
+                name: "global",
+                cmd: {hu: ["globálisváltozó"]},
+                func: function(attr) {
+                    globalvariables[attr[0]] = attr[1];
+                    reloadglobals = true;
+                },
+                prop: ["s", "x"]
             }
         ];
 
@@ -253,6 +264,7 @@
             strikethrough = false;
             underline = false;
             userfunctions = [];
+            globalvariables = {};
             canvas.lineWidth = 1;
             canvas.fillStyle = "white";
             canvas.lineCap = "round";
@@ -439,6 +451,14 @@
                 var index = 0;
                 var e = false;
                 while (index < arr.length) {
+                    if (reloadglobals) {
+                        for (let i = 0; i < arr.length; i++) {
+                            if (arr[i][0] == ":" && typeof globalvariables[arr[i].substring(1, arr[i].length)] != "undefined") {
+                                arr[i] = globalvariables[arr[i].substring(1, arr[i].length)];
+                            }
+                        }
+                        reloadglobals = false;
+                    }
                     let f = functions.filter(el => el.cmd[lang].filter(e => e == arr[index].toLowerCase()).length)[0]; // separate []
                     var attr = [];
                     var err = false;
