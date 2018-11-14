@@ -216,6 +216,14 @@
                 prop: ["n"]
             },
             {
+                name: "execute",
+                cmd: {hu: ["végrehajt"]},
+                func: function(attr) {
+                    interpret(1, attr[0]);
+                },
+                prop: ["c"]
+            },
+            {
                 name: "global",
                 cmd: {hu: ["globálisváltozó"]},
                 func: function(attr) {
