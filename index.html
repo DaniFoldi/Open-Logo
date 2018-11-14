@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Logo interpreter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
 </head>
 <body>
     <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">ism 12 [ism 2 [ism 90 [e 1 j 1] j 90] j 30]</textarea>
@@ -193,6 +194,22 @@
                 cmd: {hu: ["irány!"]},
                 func: function(attr) {
                     angle = attr[0];
+                },
+                prop: ["n"]
+            },
+            {
+                name: "seedrandom",
+                cmd: {hu: ["véletlen"]},
+                func: function(attr) {
+                    Math.seedrandom();
+                },
+                prop: []
+            },
+            {
+                name: "random",
+                cmd: {hu: ["véletlenszám"]},
+                func: function(attr) {
+                    return Math.floor(Math.random() * attr[0]);
                 },
                 prop: ["n"]
             }
@@ -494,6 +511,30 @@
                                         }
                                     }
                                     attr.push(arr.slice(b - 1, index));
+                                    break;
+                                case "x": // string, list or number
+                                    if (arr[index][0] == "\"") {
+                                        attr.push(arr[index].substring(1, arr[index].length));
+                                    } else if (arr[index] == "[") {
+                                        var b = index;
+                                        var bc = 0;
+                                        while (!(arr[index] == "]" && bc == 1) && !err) {
+                                            if (typeof arr[index] == "undefined") {
+                                                err = true;
+                                            } else {
+                                                if (arr[index] == "[") {
+                                                    bc++
+                                                }
+                                                if (arr[index] == "]") {
+                                                    bc--;
+                                                }
+                                                index++;
+                                            }
+                                        }
+                                        attr.push(arr.slice(b + 1, index));
+                                    } else {
+                                        attr.push(parseFloat(arr[index]));
+                                    }
                             }
                         }
                         if (!err) {
