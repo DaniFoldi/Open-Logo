@@ -6,7 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body>
-    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">ism 12 [ ism 2 [ ism 90 [ e 1 j 1 ] j 90 ] j 30 ]</textarea>
+    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">ism 12 [ism 2 [ism 90 [e 1 j 1] j 90] j 30]</textarea>
     <canvas width="640" height="480"></canvas>
     <script>
         /*
@@ -515,6 +515,14 @@
             lang = "hu";
             $("textarea").on("change keyup paste", function() {
                 let c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
+                for (let i = 0; i < c.length; i++) {
+                    while (c[i][0] == "[" && c[i].length > 1) {
+                        c.splice(i, 1, "[", c[i].substring(1, c[i].length));
+                    }
+                    while (c[i][c[i].length - 1] == "]" && c[i].length > 1) {
+                        c.splice(i, 1, c[i].substring(0, c[i].length - 1), "]");
+                    }
+                }
                 if (last == c) {
                     return;
                 }
