@@ -46,7 +46,7 @@
                 name: "left",
                 cmd: {hu: ["b"]},
                 func: function(attr) {
-                    angle -= attr[0];
+                    angle = overflow(angle - attr[0], 360);
                 },
                 prop: ["n"]
             },
@@ -54,7 +54,7 @@
                 name: "right",
                 cmd: {hu: ["j"]},
                 func: function(attr) {
-                    angle += attr[0];
+                    angle = overflow(angle + attr[0], 360);
                 },
                 prop: ["n"]
             },
@@ -195,7 +195,7 @@
                 name: "heading",
                 cmd: {hu: ["irány!"]},
                 func: function(attr) {
-                    angle = attr[0];
+                    angle = overflow(attr[0], 360);
                 },
                 prop: ["n"]
             },
@@ -283,8 +283,20 @@
         }
 
         function overflow(number, size) {
+            while (number < -size * 1000000) {
+                number += size * 1000000;
+            }
+            while (number < -size * 1000) {
+                number += size * 1000;
+            }
             while (number < 0) {
                 number += size;
+            }
+            while (number > size * 1000000) {
+                number -= size * 1000000;
+            }
+            while (number > size * 1000) {
+                number -= size * 1000;
             }
             while (number > size) {
                 number -= size;
