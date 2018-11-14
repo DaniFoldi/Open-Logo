@@ -457,21 +457,21 @@
                         for (var i = 0; i < f.prop.length && !err; i++) {
                             index++;
                             switch (f.prop[i]) {
-                                case "n":
+                                case "n": //number
                                     if (typeof parseFloat(arr[index]) == "number" && !isNaN(parseFloat(arr[index]))) {
                                         attr.push(parseFloat(arr[index]));
                                     } else {
                                         err = true;
                                     }
                                     break;
-                                case "s":
                                     if (typeof arr[index] == "string" && arr[index] != "") {
                                         attr.push(arr[index]);
+                                case "s": //string
                                     } else {
                                         err = true;
                                     }
                                     break;
-                                case "c":
+                                case "c": //list
                                     var b = index;
                                     var bc = 0;
                                     while (!(arr[index] == "]" && bc == 1) && !err) {
@@ -490,7 +490,7 @@
                                     attr.push(arr.slice(b + 1, index));
                                     //hasError(code);
                                     break;
-                                case "v":
+                                case "v": // variable
                                     var b = index;
                                     while (!err && arr[index].indexOf(":") == 0) {
                                         if (typeof arr[index] == "undefined") {
@@ -501,7 +501,7 @@
                                     }
                                     attr.push(arr.slice(b, index));
                                     break;
-                                case "b":
+                                case "b": //function body
                                     var b = index;
                                     while (!err && arr[index].toLowerCase() != "vége") {
                                         if (typeof arr[index] == "undefined") {
