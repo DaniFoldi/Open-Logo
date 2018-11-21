@@ -283,7 +283,7 @@
 
       function loadSketch() {
         if (typeof window.localStorage != null) {
-          if (typeof window.localStorage.getItem('sketch') === "string") {
+          if (typeof window.localStorage.getItem('sketch') === 'string') {
             return window.localStorage.getItem('sketch')
           } else {
             return ""
@@ -383,6 +383,18 @@
           setColorAt(xp, yp, fill)
           stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1])
         }
+      }
+
+      function same(a, b) {
+        if (a.length !== b.length) {
+          return false
+        }
+        for (let i = 0; i < a.length; i++) {
+          if (a[i] !== b[i]) {
+            return false
+          }
+        }
+        return true
       }
 
       function color (c) {
@@ -607,7 +619,7 @@
               c.splice(i, 1, c[i].substring(0, c[i].length - 1), ']')
             }
           }
-          if (last === c) {
+          if (same(last, c)) {
             return
           }
           saveSketch(c)
