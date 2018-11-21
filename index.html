@@ -12,24 +12,40 @@
         width: 100%;
         height: 100vh;
         overflow-y: hidden;
+        display: grid;
+        grid-template-areas: "menu canvas table"
+          "editor editor editor";
+      }
+      body > * {
+        align-self: all;
+        justify-content: all;
       }
       canvas {
-        margin-left: calc(50% - 320px);
-        display: block;
-        width: 640px;
-        height: 480px;
+        postiion: relative;
+        grid-area: canvas;
       }
       textarea {
-        box-sizing: border-box;
-        width: 100%;
-        height: calc(100vh - 480px);
+        grid-area: editor;
         font-family: Courier;
         font-size: 14px;
+      }
+      menu {
+        padding: 0;
+        margin: 0;
+        grid-area: menu;
+      }
+      div {
+        grid-area: table;
       }
     </style>
 </head>
 <body>
+    <menu>
+      <button id="size">Change to larger canvas</button>
+    </menu>
     <canvas></canvas>
+    <nav>
+    </nav>
     <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
     <script>
       /*
@@ -277,7 +293,7 @@
 
       function saveSketch(data) {
         if (typeof window.localStorage != null) {
-          window.localStorage.setItem('sketch', data.join(' '))
+          window.localStorage.setItem('sketch', data)
         }
       }
 
@@ -383,6 +399,21 @@
           setColorAt(xp, yp, fill)
           stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1])
         }
+      }
+
+      function setSize(size) {
+        if (size === 'l') {
+          $('body').css({gridTemplateRows: "720px 1fr", gridTemplateColumns: "1fr 960px 1fr"});
+          canvasTag.width = 960
+          canvasTag.height = 720
+          $('#size').text('Change to smaller canvas')
+        } else {
+          $('body').css({gridTemplateRows: "480px 1fr", gridTemplateColumns: "1fr 640px 1fr"});
+          canvasTag.width = 640
+          canvasTag.height = 480
+          $('#size').text('Change to larger canvas')
+        }
+        $('textarea').trigger('paste')
       }
 
       function same(a, b) {
@@ -605,12 +636,12 @@
       $(function () {
         let last = []
         canvasTag = $('canvas')[0]
-        canvasTag.width = canvasTag.offsetWidth
-        canvasTag.height = canvasTag.offsetHeight
         canvas = canvasTag.getContext('2d')
+        let lastSize = {w: canvasTag.width, h: canvasTag.height}
         window.lang = 'hu'
         $('textarea').val(loadSketch()).on('change keyup paste', function (event) {
           let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
+          saveSketch($('textarea').val())
           for (let i = 0; i < c.length; i++) {
             while (c[i][0] === '[' && c[i].length > 1) {
               c.splice(i, 1, '[', c[i].substring(1, c[i].length))
@@ -619,11 +650,11 @@
               c.splice(i, 1, c[i].substring(0, c[i].length - 1), ']')
             }
           }
-          if (same(last, c)) {
+          if (same(last, c) && lastSize.w === canvasTag.width && lastSize.h === canvasTag.height) {
             return
           }
-          saveSketch(c)
           last = c
+          lastSize = {w: canvasTag.width, h: canvasTag.height}
           resetCanvas()
           loadData()
           if (interpret(1, c)) {
@@ -632,7 +663,10 @@
             $('body').css({ background: '#DDD' })
           }
           drawData()
-        }).trigger('paste')
+        })
+        $('button').on('click', function () {
+          setSize(canvasTag.width == 640 ? 'l' : 's')
+        }).trigger('click')
       })
     </script>
 </body>
