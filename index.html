@@ -10,614 +10,571 @@
     <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">ism 12 [ism 2 [ism 90 [e 1 j 1] j 90] j 30]</textarea>
     <canvas width="640" height="480"></canvas>
     <script>
-        /*
-        Colors from clrs.cc
-        Commands from http://moo.tkiki.hu/csharp/Imagine%20parancsok.pdf
-        Operators from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-        Line drawing from https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-        Async fill? and execution? https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await
-        Text decoration https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas  https://stackoverflow.com/questions/4627133/is-it-possible-to-draw-text-decoration-underline-etc-with-html5-canvas-text
-        Seeded randomness http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
-        */
+      /*
+      Colors from clrs.cc
+      Commands from http://moo.tkiki.hu/csharp/Imagine%20parancsok.pdf
+      Operators from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+      Line drawing from https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+      Async fill? and execution? https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await
+      Text decoration https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas  https://stackoverflow.com/questions/4627133/is-it-possible-to-draw-text-decoration-underline-etc-with-html5-canvas-text
+      Seeded randomness http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
+      */
 
-        var x, y, angle, pen, fillcolor, underline, strikethrough, size;
-        var userfunctions = [];
-        var globalvariables = {};
-        var reloadglobals = false;
-        var canvas, canvasTag;
-        var functions = [
-            {
-                name: "forward",
-                cmd: {hu: ["e", "előre"], en: ["fd"]},
-                func: function(attr) {
-                    drawLine(x, y, x += attr[0] * Math.sin(angle * Math.PI / 180), y -= attr[0] * Math.cos(angle * Math.PI / 180));
-                },
-                prop: ["n"]
-            },
-            {
-                name: "backward",
-                cmd: {hu: ["h"]},
-                func: function(attr) {
-                    drawLine(x, y, x -= attr[0] * Math.sin(angle * Math.PI / 180), y += attr[0] * Math.cos(angle * Math.PI / 180));
-                },
-                prop: ["n"]
-            },
-            {
-                name: "left",
-                cmd: {hu: ["b"]},
-                func: function(attr) {
-                    angle = overflow(angle - attr[0], 360);
-                },
-                prop: ["n"]
-            },
-            {
-                name: "right",
-                cmd: {hu: ["j"]},
-                func: function(attr) {
-                    angle = overflow(angle + attr[0], 360);
-                },
-                prop: ["n"]
-            },
-            {
-                name: "penup",
-                cmd: {hu: ["tf"]},
-                func: function(attr) {
-                    pen = false;
-                },
-                prop: []
-            },
-            {
-                name: "pendown",
-                cmd: {hu: ["tl"]},
-                func: function(attr) {
-                    pen = true;
-                },
-                prop: []
-            },
-            {
-                name: "clear",
-                cmd: {hu: ["tr", "törölrajzlap"]},
-                func: function(attr) {
-                    resetCanvas();
-                },
-                prop: []
-            },
-            {
-                name: "pencolor",
-                cmd: {hu: ["tsz!"]},
-                func: function(attr) {
-                    canvas.strokeStyle = color(attr[0]);
-                },
-                prop: ["s"]
-            },
-            {
-                name: "fillcolor",
-                cmd: {hu: ["tlsz!"]},
-                func: function(attr) {
-                    fillcolor = color(attr[0]);
-                },
-                prop: ["s"]
-            },
-            {
-                name: "fill",
-                cmd: {hu: ["tölt!"]},
-                func: function(attr) {
-                    fillAround(Math.round(x), Math.round(y), colorAt(Math.round(x), Math.round(y)), hexToRgb(fillcolor));
-                },
-                prop: []
-            },
-            {
-                name: "penwidth",
-                cmd: {hu: ["tv!"]},
-                func: function(attr) {
-                    canvas.lineWidth = attr[0];
-                },
-                prop: ["n"]
-            },
-            {
-                name: "repeat",
-                cmd: {hu: ["ism", "ismételd"]},
-                func: function(attr) {
-                    interpret(attr[0], attr[1]);
-                },
-                prop: ["n", "c"]
-            },
-            {
-                name: "circle",
-                cmd: {hu: ["kör"]},
-                func: function(attr) {
-                    drawData();
-                    canvas.beginPath();
-                    canvas.arc(x, y, attr[0], 0, 2 * Math.PI);
-                    canvas.stroke();
-                    loadData();
-                },
-                prop: ["n"]
-            },
-            {
-                name: "font",
-                cmd: {hu: ["betűtípus!"]},
-                func: function(attr) {
-                    size = parseInt(attr[0][4]);
-                    canvas.font = ((attr[0][6] == 1 || attr[0][6] == 3 || attr[0][6] == 5) ? "italic " : "") + (attr[0][5] == 700 ? "bold " : "") + attr[0][4] + "px " + attr[0][1];
-                    canvas.textBaseline = attr[0][8] == 1 ? "bottom" : "top";
-                    if (attr[0][6] == 2 || attr[0][6] == 3) {
-                        underline = true;
-                    } else {
-                        underline = false;
-                    }
-                    if (attr[0][6] == 4 || attr[0][6] == 5) {
-                        strikethrough = true;
-                    } else {
-                        strikethrough = false;
-                    }
-                },
-                prop: ["c"]
-            },
-            {
-                name: "label",
-                cmd: {hu: ["címke"]},
-                func: function(attr) {
-                    if (pen) {
-                        drawData();
-                        var oldcolor = canvas.fillStyle;
-                        canvas.fillStyle = canvas.strokeStyle;
-                        canvas.fillText(attr[0].substr(1), x, y);
-                        canvas.fillStyle = oldcolor;
-                        loadData();
-                        if (underline) {
-                            textDecoration(attr[0].substr(1), 0);
-                        }
-                        if (strikethrough) {
-                            textDecoration(attr[0].substr(1), -size / 2 - (canvas.textBaseline == "top" ? 0 : size));
-                        }
-                    }
-                },
-                prop: ["s"]
-            },
-            {
-                name: "method",
-                cmd: {hu: ["eljárás"]},
-                func: function(attr) {
-                    userfunctions.push({name: attr[0], input: attr[1], code: attr[2]});
-                },
-                prop: ["s", "v", "b"]
-            },
-            {
-                name: "home",
-                cmd: {hu: ["haza"]},
-                func: function(attr) {
-                    drawLine(x, y, x = canvasTag.width / 2, y = canvasTag.height / 2);
-                },
-                prop: []
-            },
-            {
-                name: "heading",
-                cmd: {hu: ["irány!"]},
-                func: function(attr) {
-                    angle = overflow(attr[0], 360);
-                },
-                prop: ["n"]
-            },
-            {
-                name: "seedrandom",
-                cmd: {hu: ["véletlen"]},
-                func: function(attr) {
-                    Math.seedrandom();
-                },
-                prop: []
-            },
-            {
-                name: "random",
-                cmd: {hu: ["véletlenszám"]},
-                func: function(attr) {
-                    return Math.floor(Math.random() * attr[0]);
-                },
-                prop: ["n"]
-            },
-            {
-                name: "execute",
-                cmd: {hu: ["végrehajt"]},
-                func: function(attr) {
-                    interpret(1, attr[0]);
-                },
-                prop: ["c"]
-            },
-            {
-                name: "global",
-                cmd: {hu: ["globálisváltozó"]},
-                func: function(attr) {
-                    globalvariables[attr[0]] = attr[1];
-                    reloadglobals = true;
-                },
-                prop: ["s", "x"]
-            }
-        ];
-
-        var canvasData;
-
-        function loadData() {
-            canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height);
-        }
-
-        function drawData() {
-            if (typeof canvasData != "undefined") {
-                canvas.putImageData(canvasData, 0, 0);
-            }
-        }
-
-        function drawLine(x_from, y_from, x_to, y_to) {
+      let x, y, angle, pen, fillcolor, underline, strikethrough, size
+      let userfunctions = []
+      let globalvariables = {}
+      let reloadglobals = false
+      let canvas, canvasTag
+      const functions = [
+        {
+          name: 'forward',
+          cmd: { hu: ['e', 'előre'], en: ['fd'] },
+          func: function (attr) {
+            drawLine(x, y, x += attr[0] * Math.sin(angle * Math.PI / 180), y -= attr[0] * Math.cos(angle * Math.PI / 180))
+          },
+          prop: ['n']
+        },
+        {
+          name: 'backward',
+          cmd: { hu: ['h'] },
+          func: function (attr) {
+            drawLine(x, y, x -= attr[0] * Math.sin(angle * Math.PI / 180), y += attr[0] * Math.cos(angle * Math.PI / 180))
+          },
+          prop: ['n']
+        },
+        {
+          name: 'left',
+          cmd: { hu: ['b'] },
+          func: function (attr) {
+            angle = overflow(angle - attr[0], 360)
+          },
+          prop: ['n']
+        },
+        {
+          name: 'right',
+          cmd: { hu: ['j'] },
+          func: function (attr) {
+            angle = overflow(angle + attr[0], 360)
+          },
+          prop: ['n']
+        },
+        {
+          name: 'penup',
+          cmd: { hu: ['tf'] },
+          func: function (attr) {
+            pen = false
+          },
+          prop: []
+        },
+        {
+          name: 'pendown',
+          cmd: { hu: ['tl'] },
+          func: function (attr) {
+            pen = true
+          },
+          prop: []
+        },
+        {
+          name: 'clear',
+          cmd: { hu: ['tr', 'törölrajzlap'] },
+          func: function (attr) {
+            resetCanvas()
+          },
+          prop: []
+        },
+        {
+          name: 'pencolor',
+          cmd: { hu: ['tsz!'] },
+          func: function (attr) {
+            canvas.strokeStyle = color(attr[0])
+          },
+          prop: ['s']
+        },
+        {
+          name: 'fillcolor',
+          cmd: { hu: ['tlsz!'] },
+          func: function (attr) {
+            fillcolor = color(attr[0])
+          },
+          prop: ['s']
+        },
+        {
+          name: 'fill',
+          cmd: { hu: ['tölt!'] },
+          func: function (attr) {
+            fillAround(Math.round(x), Math.round(y), colorAt(Math.round(x), Math.round(y)), hexToRgb(fillcolor))
+          },
+          prop: []
+        },
+        {
+          name: 'penwidth',
+          cmd: { hu: ['tv!'] },
+          func: function (attr) {
+            canvas.lineWidth = attr[0]
+          },
+          prop: ['n']
+        },
+        {
+          name: 'repeat',
+          cmd: { hu: ['ism', 'ismételd'] },
+          func: function (attr) {
+            interpret(attr[0], attr[1])
+          },
+          prop: ['n', 'c']
+        },
+        {
+          name: 'circle',
+          cmd: { hu: ['kör'] },
+          func: function (attr) {
+            drawData()
+            canvas.beginPath()
+            canvas.arc(x, y, attr[0], 0, 2 * Math.PI)
+            canvas.stroke()
+            loadData()
+          },
+          prop: ['n']
+        },
+        {
+          name: 'font',
+          cmd: { hu: ['betűtípus!'] },
+          func: function (attr) {
+            size = parseInt(attr[0][4])
+            canvas.font = ((attr[0][6] === 1 || attr[0][6] === 3 || attr[0][6] === 5) ? 'italic ' : '') + (attr[0][5] === 700 ? 'bold ' : '') + attr[0][4] + 'px ' + attr[0][1]
+            canvas.textBaseline = attr[0][8] === 1 ? 'bottom' : 'top'
+            underline = attr[0][6] === 2 || attr[0][6] === 3
+            strikethrough = attr[0][6] === 4 || attr[0][6] === 5
+          },
+          prop: ['c']
+        },
+        {
+          name: 'label',
+          cmd: { hu: ['címke'] },
+          func: function (attr) {
             if (pen) {
-                let color = hexToRgb(canvas.strokeStyle);
-                if (Math.abs(y_to - y_from) <= Math.abs(x_to - x_from)) {
-                    for (let xp = Math.round(Math.min(x_from, x_to)); xp <= Math.max(x_to, x_from); xp++) {
-                        let yp = Math.round(y_from + (xp - x_from) * (y_to - y_from) / (x_to - x_from));
-                        setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color);
-                    }
-                } else {
-                    for (let yp = Math.round(Math.min(y_from, y_to)); yp <= Math.max(y_to, y_from); yp++) {
-                        let xp = Math.round(x_from + (yp - y_from) * (x_to - x_from) / (y_to - y_from));
-                        setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color);
-                    }
-                }
+              drawData()
+              const oldcolor = canvas.fillStyle
+              canvas.fillStyle = canvas.strokeStyle
+              canvas.fillText(attr[0].substr(1), x, y)
+              canvas.fillStyle = oldcolor
+              loadData()
+              if (underline) {
+                textDecoration(attr[0].substr(1), 0)
+              }
+              if (strikethrough) {
+                textDecoration(attr[0].substr(1), -size / 2 - (canvas.textBaseline === 'top' ? 0 : size))
+              }
             }
+          },
+          prop: ['s']
+        },
+        {
+          name: 'method',
+          cmd: { hu: ['eljárás'] },
+          func: function (attr) {
+            userfunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
+          },
+          prop: ['s', 'v', 'b']
+        },
+        {
+          name: 'home',
+          cmd: { hu: ['haza'] },
+          func: function (attr) {
+            drawLine(x, y, x = canvasTag.width / 2, y = canvasTag.height / 2)
+          },
+          prop: []
+        },
+        {
+          name: 'heading',
+          cmd: { hu: ['irány!'] },
+          func: function (attr) {
+            angle = overflow(attr[0], 360)
+          },
+          prop: ['n']
+        },
+        {
+          name: 'seedrandom',
+          cmd: { hu: ['véletlen'] },
+          func: function (attr) {
+            Math.seedrandom()
+          },
+          prop: []
+        },
+        {
+          name: 'random',
+          cmd: { hu: ['véletlenszám'] },
+          func: function (attr) {
+            return Math.floor(Math.random() * attr[0])
+          },
+          prop: ['n']
+        },
+        {
+          name: 'execute',
+          cmd: { hu: ['végrehajt'] },
+          func: function (attr) {
+            interpret(1, attr[0])
+          },
+          prop: ['c']
+        },
+        {
+          name: 'global',
+          cmd: { hu: ['globálisváltozó'] },
+          func: function (attr) {
+            globalvariables[attr[0]] = attr[1]
+            reloadglobals = true
+          },
+          prop: ['s', 'x']
         }
+      ]
 
-        function resetCanvas() {
-            x = Math.floor(canvasTag.width / 2);
-            y = Math.floor(canvasTag.height / 2);
-            angle = 0;
-            pen = true;
-            fillcolor = "#111111";
-            strikethrough = false;
-            underline = false;
-            userfunctions = [];
-            globalvariables = {};
-            canvas.lineWidth = 1;
-            canvas.fillStyle = "white";
-            canvas.lineCap = "round";
-            canvas.lineJoin = "round";
-            canvas.fillRect(0, 0, canvasTag.width, canvasTag.height);
-            canvas.strokeStyle = "black";
-            loadData();
+      function loadData () {
+        window.canvasData = canvas.getImageData(0, 0, canvasTag.width, canvasTag.height)
+      }
+
+      function drawData () {
+        if (typeof canvasData !== 'undefined') {
+          canvas.putImageData(window.canvasData, 0, 0)
         }
+      }
 
-        function overflow(number, size) {
-            while (number < -size * 1000000) {
-                number += size * 1000000;
+      function drawLine (xFrom, yFrom, xTo, yTo) {
+        if (pen) {
+          let color = hexToRgb(canvas.strokeStyle)
+          if (Math.abs(yTo - yFrom) <= Math.abs(xTo - xFrom)) {
+            for (let xp = Math.round(Math.min(xFrom, xTo)); xp <= Math.max(xTo, xFrom); xp++) {
+              let yp = Math.round(yFrom + (xp - xFrom) * (yTo - yFrom) / (xTo - xFrom))
+              setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color)
             }
-            while (number < -size * 1000) {
-                number += size * 1000;
+          } else {
+            for (let yp = Math.round(Math.min(yFrom, yTo)); yp <= Math.max(yTo, yFrom); yp++) {
+              let xp = Math.round(xFrom + (yp - yFrom) * (xTo - xFrom) / (yTo - yFrom))
+              setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color)
             }
-            while (number < 0) {
-                number += size;
-            }
-            while (number > size * 1000000) {
-                number -= size * 1000000;
-            }
-            while (number > size * 1000) {
-                number -= size * 1000;
-            }
-            while (number > size) {
-                number -= size;
-            }
-            return number;
-        }
-
-        function textDecoration(text, offset) {
-          var width = canvas.measureText(text).width;
-          var xp = x;
-          switch(canvas.textAlign){
-            case "center":
-            xp -= (width/2); break;
-            case "right":
-            xp -= width; break;
           }
+        }
+      }
 
-          var yp = y + size + offset;
-          drawLine(xp, yp, xp + width, yp);
+      function resetCanvas () {
+        x = Math.floor(canvasTag.width / 2)
+        y = Math.floor(canvasTag.height / 2)
+        angle = 0
+        pen = true
+        fillcolor = '#111111'
+        strikethrough = false
+        underline = false
+        userfunctions = []
+        globalvariables = {}
+        canvas.lineWidth = 1
+        canvas.fillStyle = 'white'
+        canvas.lineCap = 'round'
+        canvas.lineJoin = 'round'
+        canvas.fillRect(0, 0, canvasTag.width, canvasTag.height)
+        canvas.strokeStyle = 'black'
+        loadData()
+      }
+
+      function overflow (number, size) {
+        while (number < -size * 1000000) {
+          number += size * 1000000
+        }
+        while (number < -size * 1000) {
+          number += size * 1000
+        }
+        while (number < 0) {
+          number += size
+        }
+        while (number > size * 1000000) {
+          number -= size * 1000000
+        }
+        while (number > size * 1000) {
+          number -= size * 1000
+        }
+        while (number > size) {
+          number -= size
+        }
+        return number
+      }
+
+      function textDecoration (text, offset) {
+        const width = canvas.measureText(text).width
+        let xp = x
+        switch (canvas.textAlign) {
+          case 'center':
+            xp -= (width / 2)
+            break
+          case 'right':
+            xp -= width
+            break
         }
 
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
+        const yp = y + size + offset
+        drawLine(xp, yp, xp + width, yp)
+      }
 
-        function colorAt(data, xp, yp) {
-            return data.slice(4 * canvasTag.width * (yp - 1) + 4 * (xp + 1), 4 * canvasTag.width * (yp - 1) + 4 * xp + 8);
-        }
+      function hexToRgb (hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null
+      }
 
-        function setColorAt(xp, yp, fill) {
-            var o = Math.round(4 * canvasTag.width * (yp - 1) + 4 * (xp + 1));
-            canvasData.data[o] = fill.r;
-            canvasData.data[o + 1] = fill.g;
-            canvasData.data[o + 2] = fill.b;
-            canvasData.data[o + 3] = 255;
-        }
+      function colorAt (data, xp, yp) {
+        return data.slice(4 * canvasTag.width * (yp - 1) + 4 * (xp + 1), 4 * canvasTag.width * (yp - 1) + 4 * xp + 8)
+      }
 
-        function sameColor(a, b) {
-            return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
-        }
+      function setColorAt (xp, yp, fill) {
+        const o = Math.round(4 * canvasTag.width * (yp - 1) + 4 * (xp + 1))
+        window.canvasData.data[o] = fill.r
+        window.canvasData.data[o + 1] = fill.g
+        window.canvasData.data[o + 2] = fill.b
+        window.canvasData.data[o + 3] = 255
+      }
 
-        function fillAround(xp, yp, original, fill) {
-            const stack = [[xp, yp]];
-            while (stack.length) {
-                const [xp, yp] = stack.pop();
-                if (!sameColor(colorAt(canvasData.data, xp, yp), original)) continue;
-                setColorAt(xp, yp, fill);
-                stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1]); 
+      function sameColor (a, b) {
+        return a[0] === b[0] && a[1] === b[1] && a[2] === b[2]
+      }
+
+      function fillAround (xp, yp, original, fill) {
+        const stack = [[xp, yp]]
+        while (stack.length) {
+          const [xp, yp] = stack.pop()
+          if (!sameColor(colorAt(canvasData.data, xp, yp), original)) continue
+          setColorAt(xp, yp, fill)
+          stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1])
+        }
+      }
+
+      function color (c) {
+        switch (window.lang) {
+          case 'hu':
+            switch (c.toLowerCase()) {
+              case 'sötétkék':
+                return '#001f3f'
+              case 'kék':
+                return '#0074D9'
+              case 'világoskék':
+                return '#7FDBFF'
+              case 'zöldeskék':
+                return '#39CCCC'
+              case 'sötétzöld':
+                return '#3D9970'
+              case 'zöld':
+                return '#2ECC40'
+              case 'világoszöld':
+                return '#01FF70'
+              case 'sárga':
+                return '#FFDC00'
+              case 'narancssárga':
+                return '#FF851B'
+              case 'piros':
+                return '#FF4136'
+              case 'barna':
+                return '#85144b'
+              case 'rózsaszín':
+                return '#F012BE'
+              case 'lila':
+                return '#B10DC9'
+              case 'fekete':
+                return '#111111'
+              case 'sötétszürke':
+                return '#AAAAAA'
+              case 'szürke':
+                return '#DDDDDD'
+              case 'fehér':
+                return '#FFFFFF'
+            }
+            break
+          case 'en':
+          default:
+            switch (c.toLowerCase()) {
+              case 'navy':
+                return '#001f3f'
+              case 'blue':
+                return '#0074D9'
+              case 'aqua':
+                return '#7FDBFF'
+              case 'teal':
+                return '#39CCCC'
+              case 'olive':
+                return '#3D9970'
+              case 'green':
+                return '#2ECC40'
+              case 'lime':
+                return '#01FF70'
+              case 'yellow':
+                return '#FFDC00'
+              case 'orange':
+                return '#FF851B'
+              case 'red':
+                return '#FF4136'
+              case 'maroon':
+                return '#85144b'
+              case 'fuchsia':
+                return '#F012BE'
+              case 'purple':
+                return '#B10DC9'
+              case 'black':
+                return '#111111'
+              case 'gray':
+                return '#AAAAAA'
+              case 'silver':
+                return '#DDDDDD'
+              case 'white':
+                return '#FFFFFF'
             }
         }
+      }
 
-        function color(c) {
-            switch (lang) {
-                case "hu":
-                    switch (c.toLowerCase()) {
-                        case "sötétkék":
-                            return "#001f3f";
-                            break;
-                        case "kék":
-                            return "#0074D9";
-                            break;
-                        case "világoskék":
-                            return "#7FDBFF";
-                            break;
-                        case "zöldeskék":
-                            return "#39CCCC";
-                            break;
-                        case "sötétzöld":
-                            return "#3D9970";
-                            break;
-                        case "zöld":
-                            return "#2ECC40";
-                            break;
-                        case "világoszöld":
-                            return "#01FF70";
-                            break;
-                        case "sárga":
-                            return "#FFDC00";
-                            break;
-                        case "narancssárga":
-                            return "#FF851B";
-                            break;
-                        case "piros":
-                            return "#FF4136";
-                            break;
-                        case "barna":
-                            return "#85144b";
-                            break;
-                        case "rózsaszín":
-                            return "#F012BE";
-                            break;
-                        case "lila":
-                            return "#B10DC9";
-                            break;
-                        case "fekete":
-                            return "#111111";
-                            break;
-                        case "sötétszürke":
-                            return "#AAAAAA";
-                            break;
-                        case "szürke":
-                            return "#DDDDDD";
-                            break;
-                        case "fehér":
-                            return "#FFFFFF";
-                            break;
-                        }
-                case "en":
-                    switch (c.toLowerCase()) {
-                        case "navy":
-                            return "#001f3f";
-                            break;
-                        case "blue":
-                            return "#0074D9";
-                            break;
-                        case "aqua":
-                            return "#7FDBFF";
-                            break;
-                        case "teal":
-                            return "#39CCCC";
-                            break;
-                        case "olive":
-                            return "#3D9970";
-                            break;
-                        case "green":
-                            return "#2ECC40";
-                            break;
-                        case "lime":
-                            return "#01FF70";
-                            break;
-                        case "yellow":
-                            return "#FFDC00";
-                            break;
-                        case "orange":
-                            return "#FF851B";
-                            break;
-                        case "red":
-                            return "#FF4136";
-                            break;
-                        case "maroon":
-                            return "#85144b";
-                            break;
-                        case "fuchsia":
-                            return "#F012BE";
-                            break;
-                        case "purple":
-                            return "#B10DC9";
-                            break;
-                        case "black":
-                            return "#111111";
-                            break;
-                        case "gray":
-                            return "#AAAAAA";
-                            break;
-                        case "silver":
-                            return "#DDDDDD";
-                            break;
-                        case "white":
-                            return "#FFFFFF";
-                            break;
-                        }
+      function interpret (iter, arr) {
+        let e
+        for (let k = 0; k < iter; k++) {
+          let index = 0
+          e = false
+          while (index < arr.length) {
+            if (reloadglobals) {
+              for (let i = 0; i < arr.length; i++) {
+                if (arr[i][0] === ':' && typeof globalvariables[arr[i].substring(1, arr[i].length)] !== 'undefined') {
+                  arr[i] = globalvariables[arr[i].substring(1, arr[i].length)]
+                }
+              }
+              reloadglobals = false
             }
-        }
-
-        function interpret(iter, arr) {
-            for (var k = 0; k < iter; k++) {
-                var index = 0;
-                var e = false;
-                while (index < arr.length) {
-                    if (reloadglobals) {
-                        for (let i = 0; i < arr.length; i++) {
-                            if (arr[i][0] == ":" && typeof globalvariables[arr[i].substring(1, arr[i].length)] != "undefined") {
-                                arr[i] = globalvariables[arr[i].substring(1, arr[i].length)];
-                            }
-                        }
-                        reloadglobals = false;
-                    }
-                    let f = functions.filter(el => el.cmd[lang].filter(e => e == arr[index].toLowerCase()).length)[0]; // separate []
-                    var attr = [];
-                    var err = false;
-                    if (f == undefined) {
-                        f = userfunctions.filter(el => el.name == arr[index].toLowerCase())[0];
-                        var code = f.code;
-                        for (var i = 0; i < f.input.length; i++) {
-                            code = code.map(el => (el == f.input[i] ? arr[++index] : el));
-                        }
-                        if (f == undefined) {
-                            e = true;
-                        } else {
-                            interpret(1, code);   
-                        }
+            let f = functions.filter(el => el.cmd[window.lang].filter(e => e === arr[index].toLowerCase()).length)[0] // separate []
+            const attr = []
+            let err = false
+            if (f === undefined) {
+              f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
+              let code = f.code
+              for (let i = 0; i < f.input.length; i++) {
+                code = code.map(el => (el === f.input[i] ? arr[++index] : el))
+              }
+              if (f === undefined) {
+                e = true
+              } else {
+                interpret(1, code)
+              }
+            } else {
+              for (let i = 0; i < f.prop.length && !err; i++) {
+                index++
+                switch (f.prop[i]) {
+                  case 'n': // number
+                    if (typeof parseFloat(arr[index]) === 'number' && !isNaN(parseFloat(arr[index]))) {
+                      attr.push(parseFloat(arr[index]))
                     } else {
-                        for (var i = 0; i < f.prop.length && !err; i++) {
-                            index++;
-                            switch (f.prop[i]) {
-                                case "n": //number
-                                    if (typeof parseFloat(arr[index]) == "number" && !isNaN(parseFloat(arr[index]))) {
-                                        attr.push(parseFloat(arr[index]));
-                                    } else {
-                                        err = true;
-                                    }
-                                    break;
-                                case "s": //string
-                                    if (typeof arr[index] == "string" && arr[index] != "" && arr[index][0] == "\"") {
-                                        attr.push(arr[index].substring(1, arr[index].length));
-                                    } else {
-                                        err = true;
-                                    }
-                                    break;
-                                case "c": //list
-                                    var b = index;
-                                    var bc = 0;
-                                    while (!(arr[index] == "]" && bc == 1) && !err) {
-                                        if (typeof arr[index] == "undefined") {
-                                            err = true;
-                                        } else {
-                                            if (arr[index] == "[") {
-                                                bc++
-                                            }
-                                            if (arr[index] == "]") {
-                                                bc--;
-                                            }
-                                            index++;
-                                        }
-                                    }
-                                    attr.push(arr.slice(b + 1, index));
-                                    //hasError(code);
-                                    break;
-                                case "v": // variable
-                                    var b = index;
-                                    while (!err && arr[index].indexOf(":") == 0) {
-                                        if (typeof arr[index] == "undefined") {
-                                            err = true;
-                                        } else {
-                                            index++;
-                                        }
-                                    }
-                                    attr.push(arr.slice(b, index));
-                                    break;
-                                case "b": //function body
-                                    var b = index;
-                                    while (!err && arr[index].toLowerCase() != "vége") {
-                                        if (typeof arr[index] == "undefined") {
-                                            err = true;
-                                        } else {
-                                            index++;
-                                        }
-                                    }
-                                    attr.push(arr.slice(b - 1, index));
-                                    break;
-                                case "x": // string, list or number
-                                    if (arr[index][0] == "\"") {
-                                        attr.push(arr[index].substring(1, arr[index].length));
-                                    } else if (arr[index] == "[") {
-                                        var b = index;
-                                        var bc = 0;
-                                        while (!(arr[index] == "]" && bc == 1) && !err) {
-                                            if (typeof arr[index] == "undefined") {
-                                                err = true;
-                                            } else {
-                                                if (arr[index] == "[") {
-                                                    bc++
-                                                }
-                                                if (arr[index] == "]") {
-                                                    bc--;
-                                                }
-                                                index++;
-                                            }
-                                        }
-                                        attr.push(arr.slice(b + 1, index));
-                                    } else {
-                                        attr.push(parseFloat(arr[index]));
-                                    }
-                            }
+                      err = true
+                    }
+                    break
+                  case 's': // string
+                    if (typeof arr[index] === 'string' && arr[index] !== '' && arr[index][0] === '"') {
+                      attr.push(arr[index].substring(1, arr[index].length))
+                    } else {
+                      err = true
+                    }
+                    break
+                  case 'c': // list
+                    let b = index
+                    let bc = 0
+                    while (!(arr[index] === ']' && bc === 1) && !err) {
+                      if (typeof arr[index] === 'undefined') {
+                        err = true
+                      } else {
+                        if (arr[index] === '[') {
+                          bc++
                         }
-                        if (!err) {
-                            let result = f.func(attr);
+                        if (arr[index] === ']') {
+                          bc--
+                        }
+                        index++
+                      }
+                    }
+                    attr.push(arr.slice(b + 1, index))
+                    // hasError(code);
+                    break
+                  case 'v': // variable
+                    b = index
+                    while (!err && arr[index].indexOf(':') === 0) {
+                      if (typeof arr[index] === 'undefined') {
+                        err = true
+                      } else {
+                        index++
+                      }
+                    }
+                    attr.push(arr.slice(b, index))
+                    break
+                  case 'b': // function body
+                    b = index
+                    while (!err && arr[index].toLowerCase() !== 'vége') {
+                      if (typeof arr[index] === 'undefined') {
+                        err = true
+                      } else {
+                        index++
+                      }
+                    }
+                    attr.push(arr.slice(b - 1, index))
+                    break
+                  case 'x': // string, list or number
+                    if (arr[index][0] === '"') {
+                      attr.push(arr[index].substring(1, arr[index].length))
+                    } else if (arr[index] === '[') {
+                      b = index
+                      bc = 0
+                      while (!(arr[index] === ']' && bc === 1) && !err) {
+                        if (typeof arr[index] === 'undefined') {
+                          err = true
                         } else {
-                            e = true;
+                          if (arr[index] === '[') {
+                            bc++
+                          }
+                          if (arr[index] === ']') {
+                            bc--
+                          }
+                          index++
                         }
+                      }
+                      attr.push(arr.slice(b + 1, index))
+                    } else {
+                      attr.push(parseFloat(arr[index]))
                     }
-                    index++;
                 }
+              }
+              if (err) e = true
             }
-            return e;
+            index++
+          }
         }
+        return e
+      }
 
-        $(function() {
-            let last = [];
-            canvasTag = $("canvas")[0];
-            canvas = canvasTag.getContext("2d");
-            lang = "hu";
-            $("textarea").on("change keyup paste", function() {
-                let c = $("textarea").val().trim().split(/\s/).filter(el => el != "");
-                for (let i = 0; i < c.length; i++) {
-                    while (c[i][0] == "[" && c[i].length > 1) {
-                        c.splice(i, 1, "[", c[i].substring(1, c[i].length));
-                    }
-                    while (c[i][c[i].length - 1] == "]" && c[i].length > 1) {
-                        c.splice(i, 1, c[i].substring(0, c[i].length - 1), "]");
-                    }
-                }
-                if (last == c) {
-                    return;
-                }
-                last = c;
-                resetCanvas();
-                loadData();
-                if (interpret(1, c)) {
-                    $("body").css({background: "red"});
-                } else {
-                    $("body").css({background: "white"});
-                }
-                drawData();
-            }).trigger("paste");
-        });
+      $(function () {
+        let last = []
+        canvasTag = $('canvas')[0]
+        canvas = canvasTag.getContext('2d')
+        window.lang = 'hu'
+        $('textarea').on('change keyup paste', function () {
+          let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
+          for (let i = 0; i < c.length; i++) {
+            while (c[i][0] === '[' && c[i].length > 1) {
+              c.splice(i, 1, '[', c[i].substring(1, c[i].length))
+            }
+            while (c[i][c[i].length - 1] === ']' && c[i].length > 1) {
+              c.splice(i, 1, c[i].substring(0, c[i].length - 1), ']')
+            }
+          }
+          if (last === c) {
+            return
+          }
+          last = c
+          resetCanvas()
+          loadData()
+          if (interpret(1, c)) {
+            $('body').css({ background: 'red' })
+          } else {
+            $('body').css({ background: 'white' })
+          }
+          drawData()
+        }).trigger('paste')
+      })
     </script>
 </body>
 </html>
