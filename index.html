@@ -30,7 +30,7 @@
 </head>
 <body>
     <canvas></canvas>
-    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">ism 12 [ism 2 [ism 90 [e 1 j 1] j 90] j 30]</textarea>
+    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
     <script>
       /*
       Colors from clrs.cc
@@ -272,6 +272,24 @@
               setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color)
             }
           }
+        }
+      }
+
+      function saveSketch(data) {
+        if (typeof window.localStorage != null) {
+          window.localStorage.setItem('sketch', data.join(' '))
+        }
+      }
+
+      function loadSketch() {
+        if (typeof window.localStorage != null) {
+          if (typeof window.localStorage.getItem('sketch') === "string") {
+            return window.localStorage.getItem('sketch')
+          } else {
+            return ""
+          }
+        } else {
+          return ""
         }
       }
 
@@ -579,7 +597,7 @@
         canvasTag.height = canvasTag.offsetHeight
         canvas = canvasTag.getContext('2d')
         window.lang = 'hu'
-        $('textarea').on('change keyup paste', function () {
+        $('textarea').val(loadSketch()).on('change keyup paste', function (event) {
           let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
           for (let i = 0; i < c.length; i++) {
             while (c[i][0] === '[' && c[i].length > 1) {
@@ -592,6 +610,7 @@
           if (last === c) {
             return
           }
+          saveSketch(c)
           last = c
           resetCanvas()
           loadData()
