@@ -213,6 +213,7 @@
           cmd: { hu: ['eljárás'] },
           func: function (attr) {
             userFunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
+            saveFunctions(userFunctions)
           },
           prop: ['s', 'v', 'b']
         },
@@ -374,7 +375,6 @@
         fillcolor = '#111111'
         strikeThrough = false
         underline = false
-        userFunctions = []
         globalVariables = {}
         canvas.lineWidth = 1
         canvas.fillStyle = 'white'
@@ -720,6 +720,7 @@
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
         setSize(loadSize())
+        userFunctions = loadFunctions()
         $('textarea').val(loadSketch()).on('change keyup paste', function () {
           saveSketch($('textarea').val())
           let c = getCommands()
