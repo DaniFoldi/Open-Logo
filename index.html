@@ -6,46 +6,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
     <style>
-      body {
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100vh;
-        overflow-y: hidden;
-        display: grid;
-        grid-template-areas: "menu canvas table"
-          "editor editor editor";
-      }
-      body > * {
-        align-self: all;
-        justify-content: all;
-      }
-      canvas {
-        postiion: relative;
-        grid-area: canvas;
-      }
-      textarea {
-        grid-area: editor;
-        font-family: Courier;
-        font-size: 14px;
-      }
-      menu {
-        padding: 0;
-        margin: 0;
-        grid-area: menu;
-      }
-      div {
-        grid-area: table;
-      }
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            overflow-y: hidden;
+            display: grid;
+            grid-template-areas: "menu canvas table" "editor editor editor";
+        }
+
+        canvas {
+            position: relative;
+            grid-area: canvas;
+        }
+
+        textarea {
+            grid-area: editor;
+            font-family: Courier, monospace;
+            font-size: 14px;
+        }
+
+        menu {
+            padding: 0;
+            margin: 0;
+            grid-area: menu;
+        }
+
+        div {
+            grid-area: table;
+        }
     </style>
 </head>
 <body>
     <menu>
-      <button id="size">Change to larger canvas</button>
-      <select id="language">
-        <option value="hu">Language: HU</option>
-        <option value="en">Language: EN</option>
-      </select>
+        <button id="size">Change to larger canvas</button>
+        <select id="language">
+            <option value="hu">Language: HU</option>
+            <option value="en">Language: EN</option>
+        </select>
     </menu>
     <canvas></canvas>
     <nav>
@@ -295,14 +294,14 @@
         }
       }
 
-      function saveFunctions(data) {
-        if (typeof window.localStorage != null) {
+      function saveFunctions (data) {
+        if (window.localStorage) {
           window.localStorage.setItem('functions', JSON.stringify(data.join(' ')))
         }
       }
 
-      function loadFunctions() {
-        if (typeof window.localStorage != null) {
+      function loadFunctions () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('functions') === 'string') {
             return JSON.parse(window.localStorage.getItem('functions'))
           } else {
@@ -313,57 +312,57 @@
         }
       }
 
-      function saveLanguage(language) {
-        if (typeof window.localStorage != null) {
+      function saveLanguage (language) {
+        if (window.localStorage) {
           window.localStorage.setItem('language', language)
         }
       }
 
-      function loadLanguage() {
-        if (typeof window.localStorage != null) {
+      function loadLanguage () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('language') === 'string') {
             return window.localStorage.getItem('language')
           } else {
-            return "hu"
+            return 'hu'
           }
         } else {
-          return "hu"
+          return 'hu'
         }
       }
 
-      function saveSketch(data) {
-        if (typeof window.localStorage != null) {
+      function saveSketch (data) {
+        if (window.localStorage) {
           window.localStorage.setItem('sketch', data)
         }
       }
 
-      function loadSketch() {
-        if (typeof window.localStorage != null) {
+      function loadSketch () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('sketch') === 'string') {
             return window.localStorage.getItem('sketch')
           } else {
-            return ""
+            return ''
           }
         } else {
-          return ""
+          return ''
         }
       }
 
-      function saveSize() {
-        if (typeof window.localStorage != null) {
-          window.localStorage.setItem('size', canvasTag.width == 960 ? 's' : 'l')
+      function saveSize () {
+        if (window.localStorage) {
+          window.localStorage.setItem('size', canvasTag.width === 960 ? 's' : 'l')
         }
       }
 
-      function loadSize() {
-        if (typeof window.localStorage != null) {
+      function loadSize () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('size') === 'string') {
             return window.localStorage.getItem('size')
           } else {
-            return "s"
+            return 's'
           }
         } else {
-          return "s"
+          return 's'
         }
       }
 
@@ -453,20 +452,20 @@
         const stack = [[xp, yp]]
         while (stack.length) {
           const [xp, yp] = stack.pop()
-          if (!sameColor(colorAt(canvasData.data, xp, yp), original)) continue
+          if (!sameColor(colorAt(window.canvasData.data, xp, yp), original)) continue
           setColorAt(xp, yp, fill)
           stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1])
         }
       }
 
-      function setSize(size) {
+      function setSize (size) {
         if (size === 'l') {
-          $('body').css({gridTemplateRows: "720px 1fr", gridTemplateColumns: "1fr 960px 1fr"})
+          $('body').css({ gridTemplateRows: '720px 1fr', gridTemplateColumns: '1fr 960px 1fr' })
           canvasTag.width = 960
           canvasTag.height = 720
           $('#size').text('Change to smaller canvas')
         } else {
-          $('body').css({gridTemplateRows: "480px 1fr", gridTemplateColumns: "1fr 640px 1fr"})
+          $('body').css({ gridTemplateRows: '480px 1fr', gridTemplateColumns: '1fr 640px 1fr' })
           canvasTag.width = 640
           canvasTag.height = 480
           $('#size').text('Change to larger canvas')
@@ -474,12 +473,12 @@
         draw()
       }
 
-      function same(a, b) {
+      function same (a, b) {
         if (a.length !== b.length) {
           return false
         }
         for (let i = 0; i < a.length; i++) {
-          if (a[i] !== b[i]) {
+          if (a[i] !== b[i]) {
             return false
           }
         }
@@ -567,7 +566,7 @@
         }
       }
 
-      function getCommands() {
+      function getCommands () {
         let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
         for (let i = 0; i < c.length; i++) {
           while (c[i][0] === '[' && c[i].length > 1) {
@@ -580,7 +579,7 @@
         return c
       }
 
-      function draw() {
+      function draw () {
         resetCanvas()
         loadData()
         if (interpret(1, getCommands())) {
@@ -610,13 +609,13 @@
             let err = false
             if (f === undefined) {
               f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
-              let code = f.code
-              for (let i = 0; i < f.input.length; i++) {
-                code = code.map(el => (el === f.input[i] ? arr[++index] : el))
-              }
               if (f === undefined) {
                 e = true
               } else {
+                let code = f.code
+                for (let i = 0; i < f.input.length; i++) {
+                  code = code.map(el => (el === f.input[i] ? arr[++index] : el))
+                }
                 interpret(1, code)
               }
             } else {
@@ -705,8 +704,8 @@
               }
               if (err) {
                 e = true
-              } else {
-                let result = f.func(attr)
+              } else {
+                f.func(attr)
               }
             }
             index++
@@ -721,7 +720,7 @@
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
         setSize(loadSize())
-        $('textarea').val(loadSketch()).on('change keyup paste', function (event) {
+        $('textarea').val(loadSketch()).on('change keyup paste', function () {
           saveSketch($('textarea').val())
           let c = getCommands()
           if (same(last, c)) {
@@ -731,10 +730,10 @@
           draw()
         })
         $('button').on('click', function () {
-          setSize(canvasTag.width == 640 ? 'l' : 's')
+          setSize(canvasTag.width === 640 ? 'l' : 's')
           saveSize()
         }).trigger('click')
-        $('select').on('change', function() {
+        $('select').on('change', function () {
           window.lang = $('select').val()
           saveLanguage(window.lang)
           draw()
