@@ -61,10 +61,10 @@
       Seeded randomness http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
       */
 
-      let x, y, angle, pen, fillcolor, underline, strikethrough, size
-      let userfunctions = []
-      let globalvariables = {}
-      let reloadglobals = false
+      let x, y, angle, pen, fillcolor, underline, strikeThrough, size
+      let userFunctions = []
+      let globalVariables = {}
+      let reloadGlobals = false
       let canvas, canvasTag
       const functions = [
         {
@@ -183,7 +183,7 @@
             canvas.font = ((attr[0][6] === 1 || attr[0][6] === 3 || attr[0][6] === 5) ? 'italic ' : '') + (attr[0][5] === 700 ? 'bold ' : '') + attr[0][4] + 'px ' + attr[0][1]
             canvas.textBaseline = attr[0][8] === 1 ? 'bottom' : 'top'
             underline = attr[0][6] === 2 || attr[0][6] === 3
-            strikethrough = attr[0][6] === 4 || attr[0][6] === 5
+            strikeThrough = attr[0][6] === 4 || attr[0][6] === 5
           },
           prop: ['c']
         },
@@ -193,15 +193,15 @@
           func: function (attr) {
             if (pen) {
               drawData()
-              const oldcolor = canvas.fillStyle
+              const oldColor = canvas.fillStyle
               canvas.fillStyle = canvas.strokeStyle
               canvas.fillText(attr[0].substr(1), x, y)
-              canvas.fillStyle = oldcolor
+              canvas.fillStyle = oldColor
               loadData()
               if (underline) {
                 textDecoration(attr[0].substr(1), 0)
               }
-              if (strikethrough) {
+              if (strikeThrough) {
                 textDecoration(attr[0].substr(1), -size / 2 - (canvas.textBaseline === 'top' ? 0 : size))
               }
             }
@@ -212,7 +212,7 @@
           name: 'method',
           cmd: { hu: ['eljárás'] },
           func: function (attr) {
-            userfunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
+            userFunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
           },
           prop: ['s', 'v', 'b']
         },
@@ -260,8 +260,8 @@
           name: 'global',
           cmd: { hu: ['globálisváltozó'] },
           func: function (attr) {
-            globalvariables[attr[0]] = attr[1]
-            reloadglobals = true
+            globalVariables[attr[0]] = attr[1]
+            reloadGlobals = true
           },
           prop: ['s', 'x']
         }
@@ -372,10 +372,10 @@
         angle = 0
         pen = true
         fillcolor = '#111111'
-        strikethrough = false
+        strikeThrough = false
         underline = false
-        userfunctions = []
-        globalvariables = {}
+        userFunctions = []
+        globalVariables = {}
         canvas.lineWidth = 1
         canvas.fillStyle = 'white'
         canvas.lineCap = 'round'
@@ -596,19 +596,19 @@
           let index = 0
           e = false
           while (index < arr.length) {
-            if (reloadglobals) {
+            if (reloadGlobals) {
               for (let i = 0; i < arr.length; i++) {
-                if (arr[i][0] === ':' && typeof globalvariables[arr[i].substring(1, arr[i].length)] !== 'undefined') {
-                  arr[i] = globalvariables[arr[i].substring(1, arr[i].length)]
+                if (arr[i][0] === ':' && typeof globalVariables[arr[i].substring(1, arr[i].length)] !== 'undefined') {
+                  arr[i] = globalVariables[arr[i].substring(1, arr[i].length)]
                 }
               }
-              reloadglobals = false
+              reloadGlobals = false
             }
             let f = functions.filter(el => el.cmd[window.lang].filter(e => e === arr[index].toLowerCase()).length)[0] // separate []
             const attr = []
             let err = false
             if (f === undefined) {
-              f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
+              f = userFunctions.filter(el => el.name === arr[index].toLowerCase())[0]
               if (f === undefined) {
                 e = true
               } else {
