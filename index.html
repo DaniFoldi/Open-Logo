@@ -6,46 +6,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
     <style>
-      body {
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100vh;
-        overflow-y: hidden;
-        display: grid;
-        grid-template-areas: "menu canvas table"
-          "editor editor editor";
-      }
-      body > * {
-        align-self: all;
-        justify-content: all;
-      }
-      canvas {
-        postiion: relative;
-        grid-area: canvas;
-      }
-      textarea {
-        grid-area: editor;
-        font-family: Courier;
-        font-size: 14px;
-      }
-      menu {
-        padding: 0;
-        margin: 0;
-        grid-area: menu;
-      }
-      div {
-        grid-area: table;
-      }
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            overflow-y: hidden;
+            display: grid;
+            grid-template-areas: "menu canvas table" "editor editor editor";
+        }
+
+        canvas {
+            position: relative;
+            grid-area: canvas;
+        }
+
+        textarea {
+            grid-area: editor;
+            font-family: Courier, monospace;
+            font-size: 14px;
+        }
+
+        menu {
+            padding: 0;
+            margin: 0;
+            grid-area: menu;
+        }
+
+        div {
+            grid-area: table;
+        }
     </style>
 </head>
 <body>
     <menu>
-      <button id="size">Change to larger canvas</button>
-      <select id="language">
-        <option value="hu">Language: HU</option>
-        <option value="en">Language: EN</option>
-      </select>
+        <button id="size">Change to larger canvas</button>
+        <select id="language">
+            <option value="hu">Language: HU</option>
+            <option value="en">Language: EN</option>
+        </select>
     </menu>
     <canvas></canvas>
     <nav>
@@ -62,10 +61,10 @@
       Seeded randomness http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
       */
 
-      let x, y, angle, pen, fillcolor, underline, strikethrough, size
-      let userfunctions = []
-      let globalvariables = {}
-      let reloadglobals = false
+      let x, y, angle, pen, fillcolor, underline, strikeThrough, size
+      let userFunctions = []
+      let globalVariables = {}
+      let reloadGlobals = false
       let canvas, canvasTag
       const functions = [
         {
@@ -103,7 +102,7 @@
         {
           name: 'penup',
           cmd: { hu: ['tf'] },
-          func: function (attr) {
+          func: function () {
             pen = false
           },
           prop: []
@@ -111,7 +110,7 @@
         {
           name: 'pendown',
           cmd: { hu: ['tl'] },
-          func: function (attr) {
+          func: function () {
             pen = true
           },
           prop: []
@@ -119,7 +118,7 @@
         {
           name: 'clear',
           cmd: { hu: ['tr', 'törölrajzlap'] },
-          func: function (attr) {
+          func: function () {
             resetCanvas()
           },
           prop: []
@@ -143,7 +142,7 @@
         {
           name: 'fill',
           cmd: { hu: ['tölt!'] },
-          func: function (attr) {
+          func: function () {
             fillAround(Math.round(x), Math.round(y), colorAt(Math.round(x), Math.round(y)), hexToRgb(fillcolor))
           },
           prop: []
@@ -184,7 +183,7 @@
             canvas.font = ((attr[0][6] === 1 || attr[0][6] === 3 || attr[0][6] === 5) ? 'italic ' : '') + (attr[0][5] === 700 ? 'bold ' : '') + attr[0][4] + 'px ' + attr[0][1]
             canvas.textBaseline = attr[0][8] === 1 ? 'bottom' : 'top'
             underline = attr[0][6] === 2 || attr[0][6] === 3
-            strikethrough = attr[0][6] === 4 || attr[0][6] === 5
+            strikeThrough = attr[0][6] === 4 || attr[0][6] === 5
           },
           prop: ['c']
         },
@@ -194,15 +193,15 @@
           func: function (attr) {
             if (pen) {
               drawData()
-              const oldcolor = canvas.fillStyle
+              const oldColor = canvas.fillStyle
               canvas.fillStyle = canvas.strokeStyle
               canvas.fillText(attr[0].substr(1), x, y)
-              canvas.fillStyle = oldcolor
+              canvas.fillStyle = oldColor
               loadData()
               if (underline) {
                 textDecoration(attr[0].substr(1), 0)
               }
-              if (strikethrough) {
+              if (strikeThrough) {
                 textDecoration(attr[0].substr(1), -size / 2 - (canvas.textBaseline === 'top' ? 0 : size))
               }
             }
@@ -213,14 +212,15 @@
           name: 'method',
           cmd: { hu: ['eljárás'] },
           func: function (attr) {
-            userfunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
+            userFunctions.push({ name: attr[0], input: attr[1], code: attr[2] })
+            saveFunctions(userFunctions)
           },
           prop: ['s', 'v', 'b']
         },
         {
           name: 'home',
           cmd: { hu: ['haza'] },
-          func: function (attr) {
+          func: function () {
             drawLine(x, y, x = canvasTag.width / 2, y = canvasTag.height / 2)
           },
           prop: []
@@ -236,7 +236,7 @@
         {
           name: 'seedrandom',
           cmd: { hu: ['véletlen'] },
-          func: function (attr) {
+          func: function () {
             Math.seedrandom()
           },
           prop: []
@@ -261,8 +261,8 @@
           name: 'global',
           cmd: { hu: ['globálisváltozó'] },
           func: function (attr) {
-            globalvariables[attr[0]] = attr[1]
-            reloadglobals = true
+            globalVariables[attr[0]] = attr[1]
+            reloadGlobals = true
           },
           prop: ['s', 'x']
         }
@@ -295,14 +295,14 @@
         }
       }
 
-      function saveFunctions(data) {
-        if (typeof window.localStorage != null) {
+      function saveFunctions (data) {
+        if (window.localStorage) {
           window.localStorage.setItem('functions', JSON.stringify(data.join(' ')))
         }
       }
 
-      function loadFunctions() {
-        if (typeof window.localStorage != null) {
+      function loadFunctions () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('functions') === 'string') {
             return JSON.parse(window.localStorage.getItem('functions'))
           } else {
@@ -313,57 +313,57 @@
         }
       }
 
-      function saveLanguage(language) {
-        if (typeof window.localStorage != null) {
+      function saveLanguage (language) {
+        if (window.localStorage) {
           window.localStorage.setItem('language', language)
         }
       }
 
-      function loadLanguage() {
-        if (typeof window.localStorage != null) {
+      function loadLanguage () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('language') === 'string') {
             return window.localStorage.getItem('language')
           } else {
-            return "hu"
+            return 'hu'
           }
         } else {
-          return "hu"
+          return 'hu'
         }
       }
 
-      function saveSketch(data) {
-        if (typeof window.localStorage != null) {
+      function saveSketch (data) {
+        if (window.localStorage) {
           window.localStorage.setItem('sketch', data)
         }
       }
 
-      function loadSketch() {
-        if (typeof window.localStorage != null) {
+      function loadSketch () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('sketch') === 'string') {
             return window.localStorage.getItem('sketch')
           } else {
-            return ""
+            return ''
           }
         } else {
-          return ""
+          return ''
         }
       }
 
-      function saveSize() {
-        if (typeof window.localStorage != null) {
-          window.localStorage.setItem('size', canvasTag.width == 960 ? 's' : 'l')
+      function saveSize () {
+        if (window.localStorage) {
+          window.localStorage.setItem('size', canvasTag.width === 960 ? 's' : 'l')
         }
       }
 
-      function loadSize() {
-        if (typeof window.localStorage != null) {
+      function loadSize () {
+        if (window.localStorage) {
           if (typeof window.localStorage.getItem('size') === 'string') {
             return window.localStorage.getItem('size')
           } else {
-            return "s"
+            return 's'
           }
         } else {
-          return "s"
+          return 's'
         }
       }
 
@@ -373,10 +373,9 @@
         angle = 0
         pen = true
         fillcolor = '#111111'
-        strikethrough = false
+        strikeThrough = false
         underline = false
-        userfunctions = []
-        globalvariables = {}
+        globalVariables = {}
         canvas.lineWidth = 1
         canvas.fillStyle = 'white'
         canvas.lineCap = 'round'
@@ -453,20 +452,20 @@
         const stack = [[xp, yp]]
         while (stack.length) {
           const [xp, yp] = stack.pop()
-          if (!sameColor(colorAt(canvasData.data, xp, yp), original)) continue
+          if (!sameColor(colorAt(window.canvasData.data, xp, yp), original)) continue
           setColorAt(xp, yp, fill)
           stack.push([xp + 1, yp], [xp - 1, yp], [xp, yp + 1], [xp, yp - 1])
         }
       }
 
-      function setSize(size) {
+      function setSize (size) {
         if (size === 'l') {
-          $('body').css({gridTemplateRows: "720px 1fr", gridTemplateColumns: "1fr 960px 1fr"})
+          $('body').css({ gridTemplateRows: '720px 1fr', gridTemplateColumns: '1fr 960px 1fr' })
           canvasTag.width = 960
           canvasTag.height = 720
           $('#size').text('Change to smaller canvas')
         } else {
-          $('body').css({gridTemplateRows: "480px 1fr", gridTemplateColumns: "1fr 640px 1fr"})
+          $('body').css({ gridTemplateRows: '480px 1fr', gridTemplateColumns: '1fr 640px 1fr' })
           canvasTag.width = 640
           canvasTag.height = 480
           $('#size').text('Change to larger canvas')
@@ -474,12 +473,12 @@
         draw()
       }
 
-      function same(a, b) {
+      function same (a, b) {
         if (a.length !== b.length) {
           return false
         }
         for (let i = 0; i < a.length; i++) {
-          if (a[i] !== b[i]) {
+          if (a[i] !== b[i]) {
             return false
           }
         }
@@ -567,7 +566,7 @@
         }
       }
 
-      function getCommands() {
+      function getCommands () {
         let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
         for (let i = 0; i < c.length; i++) {
           while (c[i][0] === '[' && c[i].length > 1) {
@@ -580,7 +579,7 @@
         return c
       }
 
-      function draw() {
+      function draw () {
         resetCanvas()
         loadData()
         if (interpret(1, getCommands())) {
@@ -597,26 +596,26 @@
           let index = 0
           e = false
           while (index < arr.length) {
-            if (reloadglobals) {
+            if (reloadGlobals) {
               for (let i = 0; i < arr.length; i++) {
-                if (arr[i][0] === ':' && typeof globalvariables[arr[i].substring(1, arr[i].length)] !== 'undefined') {
-                  arr[i] = globalvariables[arr[i].substring(1, arr[i].length)]
+                if (arr[i][0] === ':' && typeof globalVariables[arr[i].substring(1, arr[i].length)] !== 'undefined') {
+                  arr[i] = globalVariables[arr[i].substring(1, arr[i].length)]
                 }
               }
-              reloadglobals = false
+              reloadGlobals = false
             }
             let f = functions.filter(el => el.cmd[window.lang].filter(e => e === arr[index].toLowerCase()).length)[0] // separate []
             const attr = []
             let err = false
             if (f === undefined) {
-              f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
-              let code = f.code
-              for (let i = 0; i < f.input.length; i++) {
-                code = code.map(el => (el === f.input[i] ? arr[++index] : el))
-              }
+              f = userFunctions.filter(el => el.name === arr[index].toLowerCase())[0]
               if (f === undefined) {
                 e = true
               } else {
+                let code = f.code
+                for (let i = 0; i < f.input.length; i++) {
+                  code = code.map(el => (el === f.input[i] ? arr[++index] : el))
+                }
                 interpret(1, code)
               }
             } else {
@@ -705,8 +704,8 @@
               }
               if (err) {
                 e = true
-              } else {
-                let result = f.func(attr)
+              } else {
+                f.func(attr)
               }
             }
             index++
@@ -721,7 +720,8 @@
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
         setSize(loadSize())
-        $('textarea').val(loadSketch()).on('change keyup paste', function (event) {
+        userFunctions = loadFunctions()
+        $('textarea').val(loadSketch()).on('change keyup paste', function () {
           saveSketch($('textarea').val())
           let c = getCommands()
           if (same(last, c)) {
@@ -731,10 +731,10 @@
           draw()
         })
         $('button').on('click', function () {
-          setSize(canvasTag.width == 640 ? 'l' : 's')
+          setSize(canvasTag.width === 640 ? 'l' : 's')
           saveSize()
         }).trigger('click')
-        $('select').on('change', function() {
+        $('select').on('change', function () {
           window.lang = $('select').val()
           saveLanguage(window.lang)
           draw()
