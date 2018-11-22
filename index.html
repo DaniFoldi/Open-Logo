@@ -102,7 +102,7 @@
         {
           name: 'penup',
           cmd: { hu: ['tf'] },
-          func: function (attr) {
+          func: function () {
             pen = false
           },
           prop: []
@@ -110,7 +110,7 @@
         {
           name: 'pendown',
           cmd: { hu: ['tl'] },
-          func: function (attr) {
+          func: function () {
             pen = true
           },
           prop: []
@@ -118,7 +118,7 @@
         {
           name: 'clear',
           cmd: { hu: ['tr', 'törölrajzlap'] },
-          func: function (attr) {
+          func: function () {
             resetCanvas()
           },
           prop: []
@@ -142,7 +142,7 @@
         {
           name: 'fill',
           cmd: { hu: ['tölt!'] },
-          func: function (attr) {
+          func: function () {
             fillAround(Math.round(x), Math.round(y), colorAt(Math.round(x), Math.round(y)), hexToRgb(fillcolor))
           },
           prop: []
@@ -220,7 +220,7 @@
         {
           name: 'home',
           cmd: { hu: ['haza'] },
-          func: function (attr) {
+          func: function () {
             drawLine(x, y, x = canvasTag.width / 2, y = canvasTag.height / 2)
           },
           prop: []
@@ -236,7 +236,7 @@
         {
           name: 'seedrandom',
           cmd: { hu: ['véletlen'] },
-          func: function (attr) {
+          func: function () {
             Math.seedrandom()
           },
           prop: []
