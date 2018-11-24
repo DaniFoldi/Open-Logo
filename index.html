@@ -460,15 +460,15 @@
 
       function setSize (size) {
         if (size === 'l') {
-          $('body').css({ gridTemplateRows: '720px 1fr', gridTemplateColumns: '1fr 960px 1fr' })
+          document.body.style.cssText = 'gridTemplateRows: 700px 1fr; gridTemplateColumns: 1fr 960px 1fr'
           canvasTag.width = 960
           canvasTag.height = 720
-          $('#size').text('Change to smaller canvas')
+          document.getElementById('size').innerText = 'Change to smaller canvas'
         } else {
-          $('body').css({ gridTemplateRows: '480px 1fr', gridTemplateColumns: '1fr 640px 1fr' })
+          document.body.style.cssText = 'gridTemplateRows: 480px 1fr; gridTemplateColumns: 1fr 640px 1fr'
           canvasTag.width = 640
           canvasTag.height = 480
-          $('#size').text('Change to larger canvas')
+          document.getElementById('size').innerText = 'Change to larger canvas'
         }
         draw()
       }
@@ -714,31 +714,44 @@
         return e
       }
 
-      $(function () {
+      document.addEventListener('DOMContentLoaded', () => {
         let last = []
-        canvasTag = $('canvas')[0]
+        canvasTag = document.querySelector('canvas')
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
         setSize(loadSize())
         userFunctions = loadFunctions()
-        $('textarea').val(loadSketch()).on('change keyup paste', function () {
-          saveSketch($('textarea').val())
+
+        const textareaTag = document.querySelector('textarea')
+        textareaTag.value = loadSketch()
+        const runSketch = () => {
+          saveSketch(textareaTag.value)
           let c = getCommands()
           if (same(last, c)) {
             return
           }
           last = c
           draw()
-        })
-        $('button').on('click', function () {
+        }
+        for (let event of ['change', 'keyup', 'paste']) {
+          textareaTag.addEventListener(event, runSketch)
+        }
+
+        const buttonTag = document.querySelector('button')
+        const changeCanvasSize = () => {
           setSize(canvasTag.width === 640 ? 'l' : 's')
           saveSize()
-        }).trigger('click')
-        $('select').on('change', function () {
-          window.lang = $('select').val()
+        }
+        buttonTag.addEventListener('click', changeCanvasSize)
+        changeCanvasSize()
+
+        const selectTag = document.querySelector('select')
+        selectTag.addEventListener('change', () => {
+          window.lang = selectTag.value
           saveLanguage(window.lang)
           draw()
-        }).val(window.lang)
+        })
+        selectTag.value = window.lang
       })
     </script>
 </body>
