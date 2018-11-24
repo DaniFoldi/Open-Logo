@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Logo interpreter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
     <style>
         body {
@@ -567,7 +566,7 @@
       }
 
       function getCommands () {
-        let c = $('textarea').val().trim().split(/\s/).filter(el => el !== '')
+        let c = document.querySelector('textarea').value.trim().split(/\s/).filter(el => el !== '')
         for (let i = 0; i < c.length; i++) {
           while (c[i][0] === '[' && c[i].length > 1) {
             c.splice(i, 1, '[', c[i].substring(1, c[i].length))
@@ -583,9 +582,9 @@
         resetCanvas()
         loadData()
         if (interpret(1, getCommands())) {
-          $('body').css({ background: 'red' })
+          document.body.style.background = 'red'
         } else {
-          $('body').css({ background: '#DDD' })
+          document.body.style.background = '#DDD'
         }
         drawData()
       }
