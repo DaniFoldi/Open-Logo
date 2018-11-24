@@ -64,7 +64,7 @@
       let userFunctions = []
       let globalVariables = {}
       let reloadGlobals = false
-      let canvas, canvasTag
+      let canvas, canvasTag, textareaTag, buttonTag
       const functions = [
         {
           name: 'forward',
@@ -462,12 +462,12 @@
           document.body.style.cssText = 'gridTemplateRows: 700px 1fr; gridTemplateColumns: 1fr 960px 1fr'
           canvasTag.width = 960
           canvasTag.height = 720
-          document.getElementById('size').innerText = 'Change to smaller canvas'
+          buttonTag.innerText = 'Change to smaller canvas'
         } else {
           document.body.style.cssText = 'gridTemplateRows: 480px 1fr; gridTemplateColumns: 1fr 640px 1fr'
           canvasTag.width = 640
           canvasTag.height = 480
-          document.getElementById('size').innerText = 'Change to larger canvas'
+          buttonTag.innerText = 'Change to larger canvas'
         }
         draw()
       }
@@ -566,7 +566,7 @@
       }
 
       function getCommands () {
-        let c = document.querySelector('textarea').value.trim().split(/\s/).filter(el => el !== '')
+        let c = textareaTag.value.trim().split(/\s/).filter(el => el !== '')
         for (let i = 0; i < c.length; i++) {
           while (c[i][0] === '[' && c[i].length > 1) {
             c.splice(i, 1, '[', c[i].substring(1, c[i].length))
@@ -718,10 +718,9 @@
         canvasTag = document.querySelector('canvas')
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
-        setSize(loadSize())
         userFunctions = loadFunctions()
 
-        const textareaTag = document.querySelector('textarea')
+        textareaTag = document.querySelector('textarea')
         textareaTag.value = loadSketch()
         const runSketch = () => {
           saveSketch(textareaTag.value)
@@ -736,7 +735,8 @@
           textareaTag.addEventListener(event, runSketch)
         }
 
-        const buttonTag = document.querySelector('button')
+        buttonTag = document.querySelector('button#size')
+        setSize(loadSize())
         const changeCanvasSize = () => {
           setSize(canvasTag.width === 640 ? 'l' : 's')
           saveSize()
