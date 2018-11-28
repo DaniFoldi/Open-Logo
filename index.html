@@ -5,7 +5,8 @@
     <title>Logo interpreter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
-    window.$ = window.jQuery = require('jquery');</script>
+      if (typeof $ === "undefined") window.$ = window.jQuery = require('jquery')
+    </script>
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
     <style>
@@ -307,7 +308,7 @@
 
       function loadSettings () {
         if (window.localStorage) {
-          if (typeof window.localStorage.getItem('functions') === 'string') {
+          if (typeof window.localStorage.getItem('settings') === 'string') {
             return JSON.parse(window.localStorage.getItem('settings'))
           } else {
             return {size: 's', language: 'hu', debugLines: false}
@@ -325,7 +326,7 @@
 
       function saveFunctions (data) {
         if (window.localStorage) {
-          window.localStorage.setItem('functions', JSON.stringify(data.join(' ')))
+          window.localStorage.setItem('functions', JSON.stringify(data))
         }
       }
 
@@ -334,10 +335,10 @@
           if (typeof window.localStorage.getItem('functions') === 'string') {
             return JSON.parse(window.localStorage.getItem('functions'))
           } else {
-            return {}
+            return []
           }
         } else {
-          return {}
+          return []
         }
       }
 
@@ -669,7 +670,7 @@
                     }
                     break
                   case 'c': // list
-                    let b = index
+                    let first = index
                     let bc = 0
                     while (!(arr[index] === ']' && bc === 1) && !err) {
                       if (typeof arr[index] === 'undefined') {
@@ -684,11 +685,11 @@
                         index++
                       }
                     }
-                    attr.push(arr.slice(b + 1, index))
+                    attr.push(arr.slice(first + 1, index))
                     // hasError(code);
                     break
                   case 'v': // variable
-                    b = index
+                    let firsta = index
                     while (!err && arr[index].indexOf(':') === 0) {
                       if (typeof arr[index] === 'undefined') {
                         err = true
@@ -696,10 +697,10 @@
                         index++
                       }
                     }
-                    attr.push(arr.slice(b, index))
+                    attr.push(arr.slice(firsta, index))
                     break
                   case 'b': // function body
-                    b = index
+                    let firstb = index
                     while (!err && arr[index].toLowerCase() !== 'vége') {
                       if (typeof arr[index] === 'undefined') {
                         err = true
@@ -707,7 +708,7 @@
                         index++
                       }
                     }
-                    attr.push(arr.slice(b - 1, index))
+                    attr.push(arr.slice(firstb - 1, index))
                     break
                   case 'x': // string, list or number
                     if (arr[index][0] === '"') {
@@ -753,6 +754,7 @@
         settings = loadSettings()
         setSize(settings.size)
         userFunctions = loadFunctions()
+        draw()
         $('#input').val(loadSketch()).on('change keyup paste', function () {
           saveSketch($('#input').val())
           let c = getCommands()
@@ -768,7 +770,7 @@
           resetCanvas()
         })
         $('#size').on('click', function () {
-          settings.size = canvasTag.width === 640 ? 's' : 'l'
+          setSize(settings.size = settings.size == 'l' ? 's' : 'l')
           saveSettings()
         }).trigger('click')
         $('#language').on('change', function () {
