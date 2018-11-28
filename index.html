@@ -44,11 +44,12 @@
             <option value="hu">Language: HU</option>
             <option value="en">Language: EN</option>
         </select>
+        <button id="resetSketch">Reset sketch</button>
     </menu>
-    <canvas></canvas>
+    <canvas id="output"></canvas>
     <nav>
     </nav>
-    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="input"></textarea>
     <script>
       /*
       Colors from clrs.cc
@@ -715,12 +716,13 @@
 
       $(function () {
         let last = []
-        canvasTag = $('canvas')[0]
+        canvasTag = $('#output')[0]
         canvas = canvasTag.getContext('2d')
         window.lang = loadLanguage()
         setSize(loadSize())
-        $('textarea').val(loadSketch()).on('change keyup paste', function (event) {
-          saveSketch($('textarea').val())
+        userFunctions = loadFunctions()
+        $('#input').val(loadSketch()).on('change keyup paste', function () {
+          saveSketch($('#input').val())
           let c = getCommands()
           if (same(last, c)) {
             return
@@ -728,12 +730,17 @@
           last = c
           draw()
         }).focus()
-        $('button').on('click', function () {
-          setSize(canvasTag.width == 640 ? 'l' : 's')
+        $("#resetSketch").on("click", function() {
+          saveSketch("")
+          $("#input").val(loadSketch()).trigger("paste")
+          resetCanvas()
+        })
+        $('#size').on('click', function () {
+          setSize(canvasTag.width === 640 ? 'l' : 's')
           saveSize()
         }).trigger('click')
-        $('select').on('change', function() {
-          window.lang = $('select').val()
+        $('#language').on('change', function () {
+          window.lang = $('#language').val()
           saveLanguage(window.lang)
           draw()
         }).val(window.lang)
