@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Logo interpreter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    window.$ = window.jQuery = require('jquery');</script>
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.4/seedrandom.min.js"></script>
     <style>
       body {
@@ -21,7 +24,6 @@
         justify-content: all;
       }
       canvas {
-        postiion: relative;
         grid-area: canvas;
       }
       textarea {
@@ -360,10 +362,10 @@
           if (typeof window.localStorage.getItem('size') === 'string') {
             return window.localStorage.getItem('size')
           } else {
-            return "s"
+            return "l"
           }
         } else {
-          return "s"
+          return "l"
         }
       }
 
