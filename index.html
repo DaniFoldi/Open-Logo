@@ -45,6 +45,7 @@
             <option value="en">Language: EN</option>
         </select>
         <button id="resetSketch">Reset sketch</button>
+        <label><input type="checkbox" id="debugLines">Debug lines</label>
     </menu>
     <canvas id="output"></canvas>
     <nav>
@@ -61,6 +62,7 @@
       Seeded randomness http://davidbau.com/archives/2010/01/30/random_seeds_coded_hints_and_quintillions.html
       */
 
+      let settings
       let x, y, angle, pen, fillcolor, underline, strikeThrough, size
       let userFunctions = []
       let globalVariables = {}
@@ -104,6 +106,9 @@
           cmd: { hu: ['tf'] },
           func: function () {
             pen = false
+            if (settings.debugLines) {
+              canvas.globalAlpha = 0.3
+            }
           },
           prop: []
         },
@@ -112,6 +117,9 @@
           cmd: { hu: ['tl'] },
           func: function () {
             pen = true
+            if (settings.debugLines) {
+              canvas.globalAlpha = 1
+            }
           },
           prop: []
         },
@@ -167,11 +175,13 @@
           name: 'circle',
           cmd: { hu: ['kör'] },
           func: function (attr) {
-            drawData()
-            canvas.beginPath()
-            canvas.arc(x, y, attr[0], 0, 2 * Math.PI)
-            canvas.stroke()
-            loadData()
+            if (pen) {
+              drawData()
+              canvas.beginPath()
+              canvas.arc(x, y, attr[0], 0, 2 * Math.PI)
+              canvas.stroke()
+              loadData()
+            }
           },
           prop: ['n']
         },
@@ -279,7 +289,7 @@
       }
 
       function drawLine (xFrom, yFrom, xTo, yTo) {
-        if (pen) {
+        if (pen || settings.debugLines) {
           let color = hexToRgb(canvas.strokeStyle)
           if (Math.abs(yTo - yFrom) <= Math.abs(xTo - xFrom)) {
             for (let xp = Math.round(Math.min(xFrom, xTo)); xp <= Math.max(xTo, xFrom); xp++) {
@@ -292,6 +302,24 @@
               setColorAt(overflow(xp, canvasTag.width), overflow(yp, canvasTag.height), color)
             }
           }
+        }
+      }
+
+      function loadSettings () {
+        if (window.localStorage) {
+          if (typeof window.localStorage.getItem('functions') === 'string') {
+            return JSON.parse(window.localStorage.getItem('settings'))
+          } else {
+            return {size: 's', language: 'hu', debugLines: false}
+          }
+        } else {
+          return {size: 's', language: 'hu', debugLines: false}
+        }
+      }
+
+      function saveSettings () {
+        if (window.localStorage) {
+          window.localStorage.setItem('settings', JSON.stringify(settings))
         }
       }
 
@@ -486,7 +514,7 @@
       }
 
       function color (c) {
-        switch (window.lang) {
+        switch (settings.language) {
           case 'hu':
             switch (c.toLowerCase()) {
               case 'sötétkék':
@@ -523,6 +551,8 @@
                 return '#DDDDDD'
               case 'fehér':
                 return '#FFFFFF'
+              default:
+                return c
             }
             break
           case 'en':
@@ -562,6 +592,8 @@
                 return '#DDDDDD'
               case 'white':
                 return '#FFFFFF'
+              default:
+                return c
             }
         }
       }
@@ -604,11 +636,11 @@
               }
               reloadGlobals = false
             }
-            let f = functions.filter(el => el.cmd[window.lang].filter(e => e === arr[index].toLowerCase()).length)[0] // separate []
+            let f = functions.filter(el => el.cmd[settings.language].filter(e => e === arr[index].toLowerCase()).length)[0] // separate []
             const attr = []
             let err = false
             if (f === undefined) {
-              f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
+              f = userFunctions.filter(el => el.name === arr[index].toLowerCase())[0]
               if (f === undefined) {
                 e = true
               } else {
@@ -718,8 +750,8 @@
         let last = []
         canvasTag = $('#output')[0]
         canvas = canvasTag.getContext('2d')
-        window.lang = loadLanguage()
-        setSize(loadSize())
+        settings = loadSettings()
+        setSize(settings.size)
         userFunctions = loadFunctions()
         $('#input').val(loadSketch()).on('change keyup paste', function () {
           saveSketch($('#input').val())
@@ -730,20 +762,25 @@
           last = c
           draw()
         }).focus()
-        $("#resetSketch").on("click", function() {
+        $('#resetSketch').on('click', function() {
           saveSketch("")
           $("#input").val(loadSketch()).trigger("paste")
           resetCanvas()
         })
         $('#size').on('click', function () {
-          setSize(canvasTag.width === 640 ? 'l' : 's')
-          saveSize()
+          settings.size = canvasTag.width === 640 ? 's' : 'l'
+          saveSettings()
         }).trigger('click')
         $('#language').on('change', function () {
-          window.lang = $('#language').val()
-          saveLanguage(window.lang)
+          settings.language = $('#language').val()
+          saveSettings()
           draw()
-        }).val(window.lang)
+        }).val(settings.language)
+        $('#debugLines').on('change', function() {
+          settings.debugLines = $('#debugLines').prop('checked')
+          saveSettings()
+          draw()
+        })
       })
     </script>
 </body>
