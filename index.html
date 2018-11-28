@@ -612,13 +612,13 @@
             let err = false
             if (f === undefined) {
               f = userfunctions.filter(el => el.name === arr[index].toLowerCase())[0]
-              let code = f.code
-              for (let i = 0; i < f.input.length; i++) {
-                code = code.map(el => (el === f.input[i] ? arr[++index] : el))
-              }
               if (f === undefined) {
                 e = true
               } else {
+                let code = f.code
+                for (let i = 0; i < f.input.length; i++) {
+                  code = code.map(el => (el === f.input[i] ? arr[++index] : el))
+                }
                 interpret(1, code)
               }
             } else {
@@ -731,7 +731,7 @@
           }
           last = c
           draw()
-        })
+        }).focus()
         $('button').on('click', function () {
           setSize(canvasTag.width == 640 ? 'l' : 's')
           saveSize()
