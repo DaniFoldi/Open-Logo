@@ -5,7 +5,7 @@
   "repository": "https://github.com/DaniFoldi/Open-Logo.git",
   "author": "Dániel Földi <dani@stefan.hu>",
   "devDependencies": {
-    "electron": "^3.0.10",
+    "electron": "^9.4.0",
     "electron-builder": "^20.38.0",
     "eslint": "^5.9.0",
     "eslint-plugin-html": "^5.0.0",
